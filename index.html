@@ -324,8 +324,8 @@
         <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 border border-gray-700 shadow-2xl">
             <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-user-shield text-red-500"></i> Login Admin</h3>
             <div class="space-y-3">
-                <input type="email" id="admin-email" placeholder="Email do Admin" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
-                <input type="password" id="admin-password" placeholder="Senha" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
+                <input type="email" id="admin-email" placeholder="Email do Admin" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none" onkeypress="handleLoginKeyPress(event)">
+                <input type="password" id="admin-password" placeholder="Senha" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none" onkeypress="handleLoginKeyPress(event)">
             </div>
             <div class="flex justify-end gap-2 mt-6">
                 <button onclick="closeModals()" class="text-gray-400 hover:text-white px-4">Cancelar</button>
@@ -378,6 +378,11 @@
             rankingMonth: null 
         };
 
+        // Função global definida no escopo window para acesso imediato
+        window.resetEditorState = () => {
+            appState.currentDocId = null;
+        }
+
         // --- AUTH ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -411,6 +416,10 @@
             document.getElementById('minigame-setup-modal').classList.add('hidden');
         };
 
+        window.handleLoginKeyPress = (e) => {
+            if (e.key === "Enter") performAdminLogin();
+        }
+
         window.performAdminLogin = () => {
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
@@ -426,10 +435,6 @@
         };
 
         // --- NAVEGAÇÃO ---
-        window.resetEditorState = () => {
-            appState.currentDocId = null;
-        }
-
         window.navigateTo = (screen) => {
             ['home-screen', 'editor-screen', 'view-screen', 'minigame-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -438,7 +443,7 @@
             
             if (screen === 'home') {
                 document.getElementById('home-screen').classList.remove('hidden');
-                window.resetEditorState();
+                if(window.resetEditorState) window.resetEditorState();
             } else if (screen === 'minigame') {
                 const el = document.getElementById('minigame-screen');
                 el.classList.remove('hidden');
@@ -622,7 +627,11 @@
             const metaRef = doc(db, "meta", "battles");
 
             try {
-                // FIXED: Using deep object structure for correct map merging
+                // Prepara thumbnails para salvar
+                const winnerThumb = await generateThumbnail(winner.url);
+                const loserThumb = await generateThumbnail(loser.url);
+
+                // Update data with thumbnails
                 const winnerUpdate = { 
                     battles: increment(1), 
                     wins: increment(1),
@@ -631,6 +640,7 @@
                     month: currentMonth,
                     beat: { [loser.name]: increment(1) }
                 };
+                if(winnerThumb) winnerUpdate.thumbnail = winnerThumb;
 
                 const loserUpdate = { 
                     battles: increment(1),
@@ -639,6 +649,7 @@
                     month: currentMonth,
                     lost_to: { [winner.name]: increment(1) }
                 };
+                if(loserThumb) loserUpdate.thumbnail = loserThumb;
 
                 await Promise.all([
                     setDoc(winnerRef, winnerUpdate, { merge: true }),
@@ -662,6 +673,29 @@
                 loading.classList.add('hidden');
             }
         };
+
+        // Gera thumbnail para o ranking
+        async function generateThumbnail(imgUrl) {
+            try {
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = imgUrl;
+                });
+                
+                const canvas = document.createElement("canvas");
+                canvas.width = 50; canvas.height = 50;
+                const ctx = canvas.getContext("2d");
+                // Center crop
+                const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+                const x = (canvas.width / 2) - (img.width / 2) * scale;
+                const y = (canvas.height / 2) - (img.height / 2) * scale;
+                ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
+                return canvas.toDataURL("image/jpeg", 0.7);
+            } catch(e) { return null; }
+        }
 
         function updateLocalStats(name, won, opponentName) {
             if(!appState.battleStats[name]) appState.battleStats[name] = { name: name, battles: 0, wins: 0, beat: {}, lost_to: {} };
@@ -759,23 +793,27 @@
                 card.className = "bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition cursor-pointer flex flex-col group relative";
                 card.onclick = () => window.openTierView(id);
                 
-                let topItems = [];
-                if (data.tiers && Array.isArray(data.tiers)) {
-                    const first = data.tiers.find(t => t.items && t.items.length > 0);
-                    if (first) topItems = first.items.slice(0, 4);
-                }
-
-                const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
-                const basePath = catPaths ? catPaths[0] : 'imagens/ninjas';
-                const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${basePath}/`;
-
-                let previewHtml = `<div class="bg-black h-24 flex items-center justify-center gap-1 p-2">`;
-                if (topItems.length > 0) {
-                    topItems.forEach(item => previewHtml += `<div class="w-12 h-12 bg-cover bg-center rounded border border-gray-600" style="background-image: url('${baseUrl}${item}.png')"></div>`);
+                let previewHtml = '';
+                if (data.thumbnail) {
+                    previewHtml = `<div class="h-32 w-full bg-cover bg-top" style="background-image: url('${data.thumbnail}')"></div>`;
                 } else {
-                    previewHtml += `<span class="text-gray-600 text-xs">Vazio</span>`;
+                    let topItems = [];
+                    if (data.tiers && Array.isArray(data.tiers)) {
+                        const first = data.tiers.find(t => t.items && t.items.length > 0);
+                        if (first) topItems = first.items.slice(0, 4);
+                    }
+                    const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
+                    const basePath = catPaths ? catPaths[0] : 'imagens/ninjas';
+                    const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${basePath}/`;
+
+                    previewHtml = `<div class="bg-black h-32 flex items-center justify-center gap-1 p-2">`;
+                    if (topItems.length > 0) {
+                        topItems.forEach(item => previewHtml += `<div class="w-12 h-12 bg-cover bg-center rounded border border-gray-600" style="background-image: url('${baseUrl}${item}.png')"></div>`);
+                    } else {
+                        previewHtml += `<span class="text-gray-600 text-xs">Vazio</span>`;
+                    }
+                    previewHtml += `</div>`;
                 }
-                previewHtml += `</div>`;
 
                 let actionBtns = '';
                 const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
@@ -874,7 +912,17 @@
             bank.innerHTML = '';
             if (appState.imagesCache[category]) { renderImagesToBank(appState.imagesCache[category]); return; }
             document.getElementById('loading-indicator').classList.remove('hidden');
-            const paths = CATEGORY_PATHS[category] || ['imagens/ninjas'];
+            
+            // STRICT MODE: ONLY USE DEFINED PATHS, NO FALLBACK TO NINJAS
+            const paths = CATEGORY_PATHS[category];
+            if (!paths) {
+                console.error("Invalid category:", category);
+                document.getElementById('loading-indicator').classList.add('hidden');
+                document.getElementById('error-message').innerText = "Categoria inválida.";
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+
             let found = false;
             for (const path of paths) {
                 try {
@@ -891,7 +939,12 @@
                 } catch (e) {}
             }
             document.getElementById('loading-indicator').classList.add('hidden');
-            if(!found) document.getElementById('error-message').classList.remove('hidden');
+            if(!found) {
+                document.getElementById('error-message').innerText = "Nenhuma imagem encontrada nesta categoria.";
+                document.getElementById('error-message').classList.remove('hidden');
+            } else {
+                document.getElementById('error-message').classList.add('hidden');
+            }
         }
 
         function renderImagesToBank(files) {
@@ -943,13 +996,52 @@
             const title = document.getElementById('tier-title').value.trim();
             const creator = document.getElementById('creator-name').value.trim();
             if (!title || !creator) { alert("Preencha Título e Nick."); return; }
+            
+            const saveBtn = document.querySelector('button[onclick="saveTierList()"]');
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
+            saveBtn.disabled = true;
+
             const tiersData = [];
             document.querySelectorAll('.tier-row').forEach(row => {
                 const items = [];
                 row.querySelector('.tier-content').querySelectorAll('.draggable-item').forEach(i => items.push(i.dataset.name));
                 tiersData.push({ label: row.querySelector('.tier-label').innerText.trim(), color: row.querySelector('.tier-label').style.backgroundColor, items: items });
             });
-            const payload = { title, creatorName: creator, tiers: tiersData, category: appState.currentCategory, userId: appState.currentUser.uid, updatedAt: serverTimestamp() };
+
+            // GERA THUMBNAIL
+            let thumbnail = null;
+            try {
+                const boardEl = document.getElementById('tier-board');
+                const canvas = await html2canvas(boardEl, {
+                    useCORS: true,
+                    scale: 1,
+                    backgroundColor: "#111"
+                });
+                const extraCanvas = document.createElement("canvas");
+                const ratio = canvas.height / canvas.width;
+                const w = 320;
+                const h = w * ratio;
+                extraCanvas.width = w;
+                extraCanvas.height = h;
+                const ctx = extraCanvas.getContext("2d");
+                ctx.drawImage(canvas, 0, 0, w, h);
+                thumbnail = extraCanvas.toDataURL("image/jpeg", 0.7);
+            } catch(e) {
+                console.warn("Thumbnail failed", e);
+            }
+
+            const payload = { 
+                title, 
+                creatorName: creator, 
+                tiers: tiersData, 
+                category: appState.currentCategory, 
+                userId: appState.currentUser.uid, 
+                updatedAt: serverTimestamp(),
+                version: 3,
+                thumbnail: thumbnail
+            };
+
             try {
                 let docId = appState.currentDocId;
                 if (docId) { await updateDoc(doc(db, "tierlists", docId), payload); showToast("Salvo!"); }
@@ -957,6 +1049,10 @@
                 appState.communityData[docId] = { ...payload, id: docId, votes: payload.votes || 0 };
                 window.openTierView(docId);
             } catch (e) { alert("Erro: " + e.message); }
+            finally {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
         };
 
         window.openTierView = (id) => {
