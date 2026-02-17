@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nin Online - Tier List Maker</title>
+    <!-- Tailwind CSS para Estilo Rápido e Bonito -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome para Ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Estilos personalizados para o Drag and Drop */
+        .tier-row {
+            min-height: 100px;
+            transition: all 0.2s;
+        }
+        .tier-label {
+            width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        .tier-content {
+            flex-grow: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            min-height: 100px;
+            background-color: #1a1a1a;
+        }
+        .draggable-item {
+            width: 70px;
+            height: 70px;
+            cursor: grab;
+            transition: transform 0.1s;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            position: relative;
+        }
+        .draggable-item:hover {
+            transform: scale(1.05);
+            border-color: #fbbf24;
+            z-index: 10;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+        
+        /* Tooltip simples com o nome ao passar o mouse */
+        .draggable-item:hover::after {
+            content: attr(data-name);
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* Cores das Tiers */
+        .tier-s { background-color: #ff7f7f; color: #4a0000; }
+        .tier-a { background-color: #ffbf7f; color: #5c3a00; }
+        .tier-b { background-color: #ffdf7f; color: #5c4b00; }
+        .tier-c { background-color: #ffff7f; color: #555500; }
+        .tier-d { background-color: #bfff7f; color: #2d5500; }
+
+        /* Scrollbar personalizada */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #111; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen">
+
+    <!-- Navbar -->
+    <nav class="bg-black border-b border-gray-800 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-yellow-500">
+                <i class="fas fa-scroll mr-2"></i>Nin Online Tier Maker
+            </h1>
+            <div id="auth-status" class="text-sm text-gray-400">
+                <i class="fas fa-spinner fa-spin"></i> Conectando...
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <!-- Área de Criação -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Coluna Esquerda: Tier List Board -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <input type="text" id="tier-title" placeholder="Dê um nome para sua Tier List..." 
+                            class="bg-gray-900 text-white text-xl font-bold px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full mr-4">
+                        <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
+                    </div>
+
+                    <!-- As Tiers -->
+                    <div id="tier-board" class="border border-gray-600 rounded overflow-hidden">
+                        <!-- S Rank -->
+                        <div class="flex border-b border-gray-600 bg-gray-900">
+                            <div class="tier-label tier-s">S</div>
+                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-S"></div>
+                        </div>
+                        <!-- A Rank -->
+                        <div class="flex border-b border-gray-600 bg-gray-900">
+                            <div class="tier-label tier-a">A</div>
+                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-A"></div>
+                        </div>
+                        <!-- B Rank -->
+                        <div class="flex border-b border-gray-600 bg-gray-900">
+                            <div class="tier-label tier-b">B</div>
+                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-B"></div>
+                        </div>
+                        <!-- C Rank -->
+                        <div class="flex border-b border-gray-600 bg-gray-900">
+                            <div class="tier-label tier-c">C</div>
+                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-C"></div>
+                        </div>
+                        <!-- D Rank -->
+                        <div class="flex border-b border-gray-600 bg-gray-900">
+                            <div class="tier-label tier-d">D</div>
+                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-D"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Banco de Imagens (Ninjas) -->
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-bold text-gray-300">Banco de Imagens</h3>
+                        <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Carregando do GitHub...</span>
+                    </div>
+                    <div id="image-bank" class="flex flex-wrap gap-2 p-4 bg-gray-900 rounded min-h-[150px]" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <!-- Imagens serão injetadas aqui via JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: Comunidade / Votação -->
+            <div class="lg:col-span-1">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 h-full flex flex-col">
+                    <h2 class="text-xl font-bold text-yellow-500 mb-4 border-b border-gray-700 pb-2">
+                        <i class="fas fa-fire mr-2"></i>Tier Lists da Comunidade
+                    </h2>
+                    <div id="community-list" class="flex-1 overflow-y-auto space-y-4 max-h-[800px] pr-2">
+                        <p class="text-gray-500 text-center mt-10">Carregando listas...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Feedback -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50">
+        Salvo com sucesso!
+    </div>
+
+    <script type="module">
+        // Importando Firebase do CDN
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // CONFIGURAÇÃO DO FIREBASE (A sua config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDlO2KnSJR0RD3f2bn025qzAJa619lDY7M",
+            authDomain: "tierlistninonline.firebaseapp.com",
+            projectId: "tierlistninonline",
+            storageBucket: "tierlistninonline.firebasestorage.app",
+            messagingSenderId: "962890522909",
+            appId: "1:962890522909:web:be2968f4bf5cc40d1881f4",
+            measurementId: "G-7JL99VSSH2"
+        };
+
+        // --- CONFIGURAÇÃO AUTOMÁTICA GITHUB ---
+        const GITHUB_USER = "aurioshlookin";
+        const GITHUB_REPO = "tierlistninonline";
+        const GITHUB_PATH = "imagens/ninjas"; // Caminho da pasta dentro do repo
+        
+        // Base URL para fallback
+        const BASE_IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}/`;
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        let currentUser = null;
+
+        // Autenticação Anônima
+        signInAnonymously(auth)
+            .then(() => console.log("Logado anonimamente"))
+            .catch((error) => console.error(error));
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-status').innerHTML = `<i class="fas fa-user-ninja text-green-400"></i> Ninja ID: ${user.uid.slice(0,6)}`;
+            }
+        });
+
+        // --- LÓGICA DO TIER LIST (DRAG AND DROP) ---
+        
+        // NOVA FUNÇÃO: Carrega imagens direto da API do GitHub
+        async function loadNinjasFromGitHub() {
+            const bank = document.getElementById('image-bank');
+            const loader = document.getElementById('loading-indicator');
+            
+            loader.classList.remove('hidden');
+            bank.innerHTML = ''; 
+
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`Erro GitHub API: ${response.status}`);
+                
+                const files = await response.json();
+                
+                // Filtra apenas imagens e cria os elementos
+                const imageFiles = files.filter(file => file.name.match(/\.(png|jpg|jpeg|gif)$/i));
+
+                if (imageFiles.length === 0) {
+                    bank.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma imagem encontrada na pasta.</p>';
+                }
+
+                imageFiles.forEach((file, index) => {
+                    // Remove a extensão para usar como ID/Nome (Ex: "Auriosh.png" -> "Auriosh")
+                    const ninjaName = file.name.replace(/\.[^/.]+$/, "");
+
+                    const div = document.createElement('div');
+                    div.className = 'draggable-item shadow-md bg-gray-700'; 
+                    
+                    // Usa o download_url fornecido pela API do GitHub
+                    div.style.backgroundImage = `url('${file.download_url}')`; 
+                    
+                    div.draggable = true;
+                    div.id = `ninja-${index}`; 
+                    div.dataset.name = ninjaName; // Nome sem .png
+                    div.dataset.fullUrl = file.download_url; // Guarda URL completa para uso futuro
+
+                    div.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData("text/plain", e.target.id);
+                        e.target.style.opacity = '0.5';
+                    });
+
+                    div.addEventListener('dragend', (e) => {
+                        e.target.style.opacity = '1';
+                    });
+
+                    bank.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Falha ao carregar imagens do GitHub:", error);
+                bank.innerHTML = `<p class="text-red-400 text-xs">Erro ao carregar imagens do GitHub.<br>Verifique se o repositório é público.</p>`;
+            } finally {
+                loader.classList.add('hidden');
+            }
+        }
+
+        // Funções Globais
+        window.allowDrop = (ev) => {
+            ev.preventDefault();
+        };
+
+        window.drop = (ev) => {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text/plain");
+            const draggedElement = document.getElementById(data);
+            
+            let target = ev.target;
+            if (target.classList.contains('draggable-item')) {
+                target = target.parentElement;
+            }
+
+            if (target.classList.contains('tier-content') || target.id === 'image-bank') {
+                target.appendChild(draggedElement);
+            }
+        };
+
+        // --- LÓGICA DO FIREBASE (SALVAR E CARREGAR) ---
+
+        window.saveTierList = async () => {
+            if (!currentUser) {
+                alert("Aguarde conectar ao servidor...");
+                return;
+            }
+
+            const titleInput = document.getElementById('tier-title');
+            const title = titleInput.value.trim() || "Sem Título";
+
+            const tiersData = {
+                S: getIdsFromTier('tier-S'),
+                A: getIdsFromTier('tier-A'),
+                B: getIdsFromTier('tier-B'),
+                C: getIdsFromTier('tier-C'),
+                D: getIdsFromTier('tier-D')
+            };
+
+            try {
+                await addDoc(collection(db, "tierlists"), {
+                    title: title,
+                    tiers: tiersData,
+                    userId: currentUser.uid,
+                    votes: 0,
+                    createdAt: serverTimestamp()
+                });
+                
+                showToast("Tier List salva e publicada!");
+                titleInput.value = "";
+                resetBoard();
+            } catch (e) {
+                console.error("Erro ao salvar: ", e);
+                alert("Erro ao salvar: " + e.message);
+            }
+        };
+
+        function getIdsFromTier(elementId) {
+            const container = document.getElementById(elementId);
+            const items = container.getElementsByClassName('draggable-item');
+            const list = [];
+            for(let item of items) {
+                list.push(item.dataset.name);
+            }
+            return list;
+        }
+
+        function resetBoard() {
+            const bank = document.getElementById('image-bank');
+            const allItems = document.querySelectorAll('.draggable-item');
+            allItems.forEach(item => bank.appendChild(item));
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                t.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- LISTAGEM E VOTAÇÃO ---
+
+        const q = query(collection(db, "tierlists"), orderBy("votes", "desc")); 
+        
+        onSnapshot(q, (snapshot) => {
+            const listContainer = document.getElementById('community-list');
+            listContainer.innerHTML = "";
+
+            snapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                
+                const card = document.createElement('div');
+                card.className = "bg-gray-700 p-3 rounded border border-gray-600 hover:border-yellow-500 transition";
+                
+                let sPreview = "";
+                if(data.tiers && data.tiers.S && data.tiers.S.length > 0) {
+                     const top3 = data.tiers.S.slice(0, 3);
+                     // Usa a URL base + nome + .png para reconstruir a imagem no feed
+                     sPreview = `<div class="flex gap-1 mb-2 mt-1">
+                        ${top3.map(name => `<div class="w-6 h-6 rounded bg-cover" style="background-image: url('${BASE_IMAGE_URL}${name}.png')"></div>`).join('')}
+                        ${data.tiers.S.length > 3 ? '<span class="text-xs text-gray-400 self-end">...</span>' : ''}
+                     </div>`;
+                } else {
+                    sPreview = `<div class="text-xs text-gray-500 italic mb-2">Sem Rank S definido</div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-white text-lg">${data.title}</h4>
+                            <p class="text-xs text-gray-400">Criado por: Ninja-${data.userId ? data.userId.slice(0,4) : '?'}</p>
+                        </div>
+                        <div class="flex flex-col items-center">
+                            <button onclick="vote('${id}')" class="text-yellow-500 hover:text-white transition">
+                                <i class="fas fa-caret-up text-2xl"></i>
+                            </button>
+                            <span class="font-mono font-bold text-sm">${data.votes || 0}</span>
+                        </div>
+                    </div>
+                    ${sPreview}
+                `;
+                listContainer.appendChild(card);
+            });
+        });
+
+        window.vote = async (docId) => {
+            const docRef = doc(db, "tierlists", docId);
+            await updateDoc(docRef, {
+                votes: increment(1)
+            });
+        };
+
+        // Iniciar carregamento automático
+        loadNinjasFromGitHub();
+
+    </script>
+</body>
+</html>
