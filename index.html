@@ -4,77 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nin Online - Tier List Maker</title>
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Html2Canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
-        /* --- ESTILOS GERAIS --- */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        /* --- EDITOR --- */
+        /* EDITOR & TIERS */
         .tier-label {
-            width: 80px; min-width: 80px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold; font-size: 1.5rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            outline: none; cursor: text;
-            word-break: break-all; text-align: center;
-            line-height: 1.1;
+            width: 80px; min-width: 80px; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.5rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            outline: none; cursor: text; word-break: break-all; text-align: center; line-height: 1.1;
         }
         .tier-content {
-            flex-grow: 1; display: flex; flex-wrap: wrap;
-            gap: 0.5rem; padding: 0.5rem;
-            min-height: 120px; background-color: #1a1a1a;
-            align-items: flex-start;
+            flex-grow: 1; display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem;
+            min-height: 120px; background-color: #1a1a1a; align-items: flex-start;
         }
         .tier-controls {
-            width: 40px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            width: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center;
             background-color: #2d2d2d; gap: 5px; padding: 5px 0;
         }
         
-        /* --- ITENS (CARD DO PERSONAGEM) --- */
+        /* CARD PADRÃO */
         .draggable-item {
-            width: 80px; height: 110px;
-            cursor: grab; transition: transform 0.1s;
-            background-color: #333;
-            border: 2px solid transparent; border-radius: 6px;
-            position: relative; display: flex; flex-direction: column;
-            justify-content: flex-end; overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            flex-shrink: 0;
+            width: 80px; height: 110px; cursor: grab; transition: transform 0.1s;
+            background-color: #333; border: 2px solid transparent; border-radius: 6px;
+            position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+            overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.3); flex-shrink: 0;
         }
         .ninja-image {
-            width: 100%; height: 100%;
-            background-size: contain; background-repeat: no-repeat;
-            background-position: center bottom; margin-bottom: 20px;
-            image-rendering: pixelated; /* Pixel Perfect */
+            width: 100%; height: 100%; background-size: contain; background-repeat: no-repeat;
+            background-position: center bottom; margin-bottom: 20px; image-rendering: pixelated;
         }
         .ninja-name {
-            position: absolute; bottom: 0; left: 0; width: 100%;
-            background-color: rgba(0,0,0,0.85); color: #fff;
-            font-size: 10px; text-align: center; padding: 2px 0;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            border-top: 1px solid #444;
+            position: absolute; bottom: 0; left: 0; width: 100%; background-color: rgba(0,0,0,0.85);
+            color: #fff; font-size: 10px; text-align: center; padding: 2px 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-top: 1px solid #444;
         }
-        .draggable-item:hover {
-            transform: scale(1.05); border-color: #fbbf24; z-index: 10;
-        }
+        .draggable-item:hover { transform: scale(1.05); border-color: #fbbf24; z-index: 10; }
         .draggable-item:active { cursor: grabbing; }
-        
-        /* --- VIEW MODE --- */
         .static-item { cursor: default !important; }
         .static-item:hover { transform: none !important; border-color: transparent !important; }
+
+        /* MINI GAME CARDS */
+        .battle-card {
+            width: 160px; height: 220px; cursor: pointer; transition: all 0.2s;
+            background-color: #2a2a2a; border: 4px solid #444; border-radius: 12px;
+            position: relative; overflow: hidden; display: flex; flex-direction: column;
+        }
+        .battle-card:hover { transform: scale(1.05); border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+        .battle-card .ninja-image { margin-bottom: 40px; } /* Mais espaço para nome */
+        .battle-card .ninja-name { font-size: 14px; padding: 8px 0; font-weight: bold; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex flex-col">
@@ -83,24 +73,27 @@
     <nav class="bg-black border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
             <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
-                <h1 class="text-xl md:text-2xl font-bold text-yellow-500 cursor-pointer flex items-center gap-2 truncate" onclick="showHomeScreen()">
-                    <i class="fas fa-scroll"></i> <span class="hidden sm:inline">Nin Online - Tier List Maker</span> <span class="sm:hidden">Nin Tier Maker</span>
+                <h1 class="text-xl md:text-2xl font-bold text-yellow-500 cursor-pointer flex items-center gap-2 truncate" onclick="navigateTo('home')">
+                    <i class="fas fa-scroll"></i> <span class="hidden sm:inline">Nin Online - Tier List</span> <span class="sm:hidden">Nin Tier</span>
                 </h1>
                 
-                <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-sm ml-4">
-                    <i class="fas fa-home"></i> <span class="hidden sm:inline">Início</span>
-                </button>
+                <div class="flex gap-2 ml-4">
+                    <button onclick="navigateTo('home')" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-white px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-2">
+                        <i class="fas fa-home"></i> Início
+                    </button>
+                    <button onclick="openMiniGameSetup()" class="bg-purple-900 hover:bg-purple-700 border border-purple-600 text-white px-3 py-1.5 rounded-lg font-bold transition text-sm flex items-center gap-2 shadow-lg shadow-purple-900/20">
+                        <i class="fas fa-gamepad"></i> Mini Game
+                    </button>
+                </div>
             </div>
             
             <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-                <!-- Botão Login Admin -->
                 <button id="login-btn" onclick="openLoginModal()" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm">
                     <i class="fas fa-lock"></i> Admin
                 </button>
                 
-                <!-- Info Admin (Logado) -->
                 <div id="admin-info" class="hidden flex items-center gap-2 bg-red-900 bg-opacity-30 px-3 py-1.5 rounded-lg border border-red-700">
-                    <span class="text-xs font-bold text-red-300"><i class="fas fa-user-shield"></i> MODO ADMIN</span>
+                    <span class="text-xs font-bold text-red-300"><i class="fas fa-user-shield"></i> ADMIN</span>
                     <button onclick="logout()" class="text-gray-400 hover:text-white text-xs ml-2" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
 
@@ -117,15 +110,26 @@
     <div class="container mx-auto p-4 flex-grow flex flex-col relative">
 
         <!-- ================= TELA INICIAL (HOME) ================= -->
-        <div id="home-screen" class="flex flex-col gap-6">
+        <div id="home-screen" class="flex flex-col gap-6 animate-fade-in">
             <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-xl border border-gray-700 shadow-2xl text-center">
-                <h2 class="text-3xl font-bold text-white mb-2">Tier Lists da Comunidade</h2>
-                <p class="text-gray-400 mb-6">Descubra os melhores metas, ninjas e estratégias de Nin Online.</p>
-                <div class="flex justify-center gap-4">
+                <h2 class="text-3xl font-bold text-white mb-2">Comunidade Nin Online</h2>
+                <p class="text-gray-400 mb-6">Crie Tier Lists ou vote no melhor Ninja no Mini Game!</p>
+                <div class="flex justify-center gap-4 flex-wrap">
                     <button onclick="openCategoryModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg transform hover:scale-105 transition">
-                        Criar Minha Tier List
+                        Criar Tier List
+                    </button>
+                    <button onclick="openMiniGameSetup()" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg transform hover:scale-105 transition">
+                        Jogar Batalha 1v1
                     </button>
                 </div>
+            </div>
+
+            <!-- Aviso Discord -->
+            <div class="p-4 bg-gray-800 rounded-lg border border-gray-700 flex flex-col md:flex-row items-center justify-center text-center gap-2 text-sm text-gray-400 shadow-md">
+                <i class="fab fa-discord text-indigo-400 text-xl"></i>
+                <p>Quer adicionar um personagem ou mudar uma imagem?</p>
+                <p class="text-gray-500 hidden md:block">|</p>
+                <p>Envie o print com o <span class="text-white font-bold">nome exato</span> para <span class="text-yellow-500 font-bold">Auriosh</span> no Discord.</p>
             </div>
 
             <!-- Grid de Tier Lists -->
@@ -136,8 +140,84 @@
             </div>
         </div>
 
+        <!-- ================= TELA DO MINI GAME ================= -->
+        <div id="minigame-screen" class="hidden flex-col gap-6 items-center animate-fade-in max-w-6xl mx-auto w-full">
+            <div class="w-full bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl text-center relative">
+                <button onclick="navigateTo('home')" class="absolute top-4 left-4 text-gray-400 hover:text-white"><i class="fas fa-arrow-left"></i> Voltar</button>
+                
+                <h2 class="text-3xl font-bold text-yellow-500 mb-2">Batalha <span id="game-category-title">Ninjas</span></h2>
+                <p class="text-gray-400 mb-8">Quem é melhor? Clique no vencedor!</p>
+
+                <!-- Área de Batalha -->
+                <div id="battle-area" class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 mb-8">
+                    <!-- Lutador 1 -->
+                    <div id="fighter-1" class="battle-card group" onclick="voteBattle(1)">
+                        <div class="ninja-image"></div>
+                        <div class="ninja-name">Carregando...</div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-2">
+                        <div class="text-4xl font-black text-red-600 italic">VS</div>
+                        <button onclick="skipBattle()" class="text-xs text-gray-500 hover:text-white border border-gray-600 px-3 py-1 rounded-full hover:bg-gray-700 transition">
+                            <i class="fas fa-forward"></i> Pular
+                        </button>
+                    </div>
+
+                    <!-- Lutador 2 -->
+                    <div id="fighter-2" class="battle-card group" onclick="voteBattle(2)">
+                        <div class="ninja-image"></div>
+                        <div class="ninja-name">Carregando...</div>
+                    </div>
+                </div>
+                
+                <div id="battle-loading" class="hidden text-yellow-500 font-bold mb-4"><i class="fas fa-spinner fa-spin"></i> Processando...</div>
+            </div>
+
+            <!-- Ranking Mini Game -->
+            <div class="w-full bg-gray-900 p-6 rounded-xl border border-gray-800">
+                <div class="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
+                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-trophy text-yellow-500"></i> Ranking Geral
+                    </h3>
+                    
+                    <!-- SELETOR DE MÊS -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-400">Mês:</label>
+                        <select id="month-selector" onchange="changeRankingMonth(this.value)" class="bg-gray-800 text-white border border-gray-600 rounded px-2 py-1 text-sm focus:border-yellow-500 outline-none">
+                            <option value="">Carregando...</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto max-h-[600px] overflow-y-auto rounded-lg border border-gray-700">
+                    <table class="w-full text-sm text-left text-gray-400">
+                        <thead class="text-xs text-gray-200 uppercase bg-gray-800 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-center w-12">#</th>
+                                <th scope="col" class="px-6 py-3">Nome</th>
+                                <th scope="col" class="px-6 py-3 text-center w-16 text-green-400" title="Vitórias">V</th>
+                                <th scope="col" class="px-6 py-3 text-center w-16 text-red-400" title="Derrotas">D</th>
+                                <th scope="col" class="px-6 py-3 text-center w-16 text-blue-400" title="Total Partidas">Total</th>
+                                <th scope="col" class="px-6 py-3 text-center w-24 text-yellow-400" title="% Aproveitamento">% Win</th>
+                                <th scope="col" class="px-6 py-3 text-left w-32" title="Quem mais venceu">Vítima Fav.</th>
+                                <th scope="col" class="px-6 py-3 text-left w-32" title="Para quem mais perdeu">Nêmesis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="game-ranking-body">
+                            <!-- Linhas inseridas via JS -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Footer Discord no MiniGame -->
+                <div class="mt-6 text-center text-xs text-gray-600 border-t border-gray-800 pt-4">
+                    <p>Faltou alguém? Mande print com nome para <span class="text-yellow-600">Auriosh</span> no Discord.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- ================= TELA DO EDITOR ================= -->
-        <div id="editor-screen" class="hidden flex-col lg:flex-row gap-6">
+        <div id="editor-screen" class="hidden flex-col lg:flex-row gap-6 animate-fade-in">
             <!-- Coluna Esquerda: Board -->
             <div class="flex-grow space-y-4">
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
@@ -161,8 +241,6 @@
                             </button>
                          </div>
                     </div>
-
-                    <!-- Tier Board -->
                     <div id="tier-board" class="border border-gray-600 rounded overflow-hidden bg-black"></div>
                 </div>
             </div>
@@ -171,53 +249,34 @@
             <div class="w-full lg:w-80 flex-shrink-0">
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky top-24 h-[calc(100vh-120px)] flex flex-col">
                     <div class="flex justify-between items-center mb-2 flex-shrink-0">
-                        <h3 class="text-lg font-bold text-gray-300">
-                            <i class="fas fa-images mr-1"></i> <span id="category-display">Imagens</span>
-                        </h3>
+                        <h3 class="text-lg font-bold text-gray-300"><i class="fas fa-images mr-1"></i> <span id="category-display">Imagens</span></h3>
                         <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Carregando...</span>
                     </div>
-                    
-                    <div id="image-bank" class="flex flex-wrap gap-2 p-2 bg-gray-900 rounded overflow-y-auto flex-grow content-start" ondrop="drop(event)" ondragover="allowDrop(event)">
-                        <!-- Imagens carregadas aqui -->
-                    </div>
+                    <div id="image-bank" class="flex flex-wrap gap-2 p-2 bg-gray-900 rounded overflow-y-auto flex-grow content-start" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
                     <div id="error-message" class="text-red-400 text-xs p-2 hidden flex-shrink-0"></div>
                 </div>
             </div>
         </div>
 
-        <!-- ================= TELA DE VISUALIZAÇÃO (VIEW) ================= -->
+        <!-- ================= TELA DE VISUALIZAÇÃO ================= -->
         <div id="view-screen" class="hidden flex-col gap-6 animate-fade-in">
-            <!-- Header da Visualização -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
                 <div class="flex items-center gap-4 w-full md:w-auto">
-                    <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold transition">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </button>
+                    <button onclick="navigateTo('home')" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-arrow-left"></i> Voltar</button>
                     <div>
-                        <h2 id="view-title" class="text-2xl font-bold text-yellow-500 leading-tight">Título da Lista</h2>
+                        <h2 id="view-title" class="text-2xl font-bold text-yellow-500 leading-tight">Título</h2>
                         <p class="text-sm text-gray-400">Criado por: <span id="view-creator" class="text-white font-bold">Nome</span></p>
                     </div>
                 </div>
-
                 <div class="flex gap-3">
-                    <button id="view-delete-btn" onclick="deleteCurrentTierList()" class="hidden bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold transition">
-                        <i class="fas fa-trash"></i> Excluir
-                    </button>
-                    <button id="view-edit-btn" onclick="editCurrentTierList()" class="hidden bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition">
-                        <i class="fas fa-pencil-alt"></i> Editar
-                    </button>
-                    <button onclick="downloadTierListImage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg">
-                        <i class="fas fa-camera"></i> Baixar Imagem
-                    </button>
+                    <button id="view-delete-btn" onclick="deleteCurrentTierList()" class="hidden bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-trash"></i> Excluir</button>
+                    <button id="view-edit-btn" onclick="editCurrentTierList()" class="hidden bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition"><i class="fas fa-pencil-alt"></i> Editar</button>
+                    <button onclick="downloadTierListImage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg"><i class="fas fa-camera"></i> Baixar Imagem</button>
                 </div>
             </div>
-
-            <!-- Área da Tier List (Static) -->
             <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-2xl overflow-hidden flex justify-center p-4 md:p-8">
                  <div id="view-capture-area" class="w-full max-w-5xl bg-gray-900 p-4 rounded-lg">
-                    <div id="view-content" class="border border-gray-700 rounded overflow-hidden bg-black">
-                        <!-- Conteúdo gerado aqui -->
-                    </div>
+                    <div id="view-content" class="border border-gray-700 rounded overflow-hidden bg-black"></div>
                     <div class="flex justify-between items-center mt-2 px-1 opacity-50">
                         <div class="text-gray-500 text-xs">Nin Online - Tier List Maker</div>
                         <div class="text-yellow-600 text-[10px] font-bold">https://aurioshlookin.github.io/tierlistninonline/</div>
@@ -228,67 +287,62 @@
 
     </div>
 
-    <!-- MODAL DE SELEÇÃO DE CATEGORIA -->
+    <!-- MODAL CATEGORIA (TIER LIST) -->
     <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
-        <div class="bg-gray-800 rounded-xl max-w-lg w-full p-6 border border-gray-700 shadow-2xl transform transition-all scale-100">
+        <div class="bg-gray-800 rounded-xl max-w-lg w-full p-6 border border-gray-700 shadow-2xl">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-white">O que vamos classificar?</h3>
-                <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+                <h3 class="text-2xl font-bold text-white">Criar Tier List de:</h3>
+                <button onclick="closeModals()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            
             <div class="grid grid-cols-2 gap-4">
-                <button onclick="startEditor('ninjas')" class="bg-gray-700 hover:bg-yellow-600 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group">
-                    <i class="fas fa-user-ninja text-3xl text-yellow-500 group-hover:text-black"></i>
-                    <span class="font-bold">Ninjas</span>
-                </button>
-                <button onclick="startEditor('maestrias')" class="bg-gray-700 hover:bg-blue-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group">
-                    <i class="fas fa-scroll text-3xl text-blue-400 group-hover:text-white"></i>
-                    <span class="font-bold">Maestrias</span>
-                </button>
-                <button onclick="startEditor('jutsus')" class="bg-gray-700 hover:bg-red-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group">
-                    <i class="fas fa-fire text-3xl text-red-500 group-hover:text-white"></i>
-                    <span class="font-bold">Jutsus</span>
-                </button>
-                <button onclick="startEditor('armas')" class="bg-gray-700 hover:bg-gray-200 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group">
-                    <i class="fas fa-gavel text-3xl text-gray-400 group-hover:text-black"></i>
-                    <span class="font-bold">Armas</span>
-                </button>
+                <button onclick="startEditor('ninjas')" class="bg-gray-700 hover:bg-yellow-600 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-user-ninja text-3xl text-yellow-500 group-hover:text-black"></i><span class="font-bold">Ninjas</span></button>
+                <button onclick="startEditor('maestrias')" class="bg-gray-700 hover:bg-blue-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-scroll text-3xl text-blue-400 group-hover:text-white"></i><span class="font-bold">Maestrias</span></button>
+                <button onclick="startEditor('jutsus')" class="bg-gray-700 hover:bg-red-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-fire text-3xl text-red-500 group-hover:text-white"></i><span class="font-bold">Jutsus</span></button>
+                <button onclick="startEditor('armas')" class="bg-gray-700 hover:bg-gray-200 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-gavel text-3xl text-gray-400 group-hover:text-black"></i><span class="font-bold">Armas</span></button>
             </div>
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN ADMIN -->
+    <!-- MODAL CATEGORIA (MINI GAME) -->
+    <div id="minigame-setup-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-xl max-w-lg w-full p-6 border border-purple-600 shadow-2xl border-t-4">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">Jogar Batalha 1v1:</h3>
+                <button onclick="closeModals()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="startMiniGame('ninjas')" class="bg-gray-700 hover:bg-yellow-600 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-user-ninja text-3xl text-yellow-500 group-hover:text-black"></i><span class="font-bold">Ninjas</span></button>
+                <button onclick="startMiniGame('maestrias')" class="bg-gray-700 hover:bg-blue-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-scroll text-3xl text-blue-400 group-hover:text-white"></i><span class="font-bold">Maestrias</span></button>
+                <button onclick="startMiniGame('jutsus')" class="bg-gray-700 hover:bg-red-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-fire text-3xl text-red-500 group-hover:text-white"></i><span class="font-bold">Jutsus</span></button>
+                <button onclick="startMiniGame('armas')" class="bg-gray-700 hover:bg-gray-200 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group"><i class="fas fa-gavel text-3xl text-gray-400 group-hover:text-black"></i><span class="font-bold">Armas</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL LOGIN ADMIN -->
     <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
         <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 border border-gray-700 shadow-2xl">
-            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <i class="fas fa-user-shield text-red-500"></i> Login Admin
-            </h3>
-            
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2"><i class="fas fa-user-shield text-red-500"></i> Login Admin</h3>
             <div class="space-y-3">
                 <input type="email" id="admin-email" placeholder="Email do Admin" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
                 <input type="password" id="admin-password" placeholder="Senha" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
             </div>
-
             <div class="flex justify-end gap-2 mt-6">
-                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-white px-4">Cancelar</button>
-                <button onclick="performAdminLogin()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold">
-                    Entrar
-                </button>
+                <button onclick="closeModals()" class="text-gray-400 hover:text-white px-4">Cancelar</button>
+                <button onclick="performAdminLogin()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold">Entrar</button>
             </div>
         </div>
     </div>
 
     <!-- TOAST -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold pointer-events-none">
-        Ação realizada!
-    </div>
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold pointer-events-none">Ação realizada!</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc, deleteDoc, getDocs, setDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // FIREBASE CONFIG
+        // CONFIGS
         const firebaseConfig = {
             apiKey: "AIzaSyDlO2KnSJR0RD3f2bn025qzAJa619lDY7M",
             authDomain: "tierlistninonline.firebaseapp.com",
@@ -298,8 +352,6 @@
             appId: "1:962890522909:web:be2968f4bf5cc40d1881f4",
             measurementId: "G-7JL99VSSH2"
         };
-
-        // GITHUB CONFIG
         const GITHUB_USER = "aurioshlookin";
         const GITHUB_REPO = "tierlistninonline";
         const CATEGORY_PATHS = {
@@ -309,476 +361,419 @@
             'armas': ['imagens/armas', 'imagens/weapons']
         };
 
-        // Estado da Aplicação
-        let appState = {
-            currentUser: null,
-            isAdmin: false, // Flag para saber se é você
-            currentCategory: 'ninjas',
-            currentDocId: null, 
-            imagesCache: {}, 
-            communityData: {} 
-        };
-
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // AUTH
-        // Tenta logar anônimo se não houver usuário. 
-        // Se o admin deslogar, ele volta a ser anônimo.
+        // ESTADO GLOBAL
+        let appState = {
+            currentUser: null,
+            isAdmin: false,
+            currentCategory: 'ninjas',
+            currentDocId: null, 
+            imagesCache: {}, 
+            communityData: {}, 
+            battleStats: {}, 
+            currentFighters: [],
+            rankingMonth: null // YYYY-MM
+        };
+
+        // --- AUTH ---
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 appState.currentUser = user;
-                // Se NÃO for anônimo, consideramos que é o admin (pois só você tem senha)
                 appState.isAdmin = !user.isAnonymous;
-                
-                updateAuthUI(user);
-                refreshCommunityGrid(); 
+                updateAuthUI();
+                renderCommunityGrid(); 
             } else {
-                // Se não tem user nenhum, loga anônimo automaticamente
                 signInAnonymously(auth).catch(console.error);
             }
         });
 
-        function updateAuthUI(user) {
+        function updateAuthUI() {
             const loginBtn = document.getElementById('login-btn');
             const adminInfo = document.getElementById('admin-info');
-
             if (appState.isAdmin) {
-                // Modo Admin
                 loginBtn.classList.add('hidden');
                 adminInfo.classList.remove('hidden');
                 adminInfo.classList.add('flex');
             } else {
-                // Modo Visitante (Anônimo)
                 loginBtn.classList.remove('hidden');
                 adminInfo.classList.add('hidden');
                 adminInfo.classList.remove('flex');
             }
         }
 
-        // --- SISTEMA DE LOGIN ADMIN ---
         window.openLoginModal = () => document.getElementById('login-modal').classList.remove('hidden');
-        window.closeLoginModal = () => document.getElementById('login-modal').classList.add('hidden');
+        window.closeModals = () => {
+            document.getElementById('login-modal').classList.add('hidden');
+            document.getElementById('category-modal').classList.add('hidden');
+            document.getElementById('minigame-setup-modal').classList.add('hidden');
+        };
 
         window.performAdminLogin = () => {
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-password').value;
-            
             if(!email || !pass) return alert("Preencha email e senha");
-
-            signInWithEmailAndPassword(auth, email, pass)
-                .then((userCredential) => {
-                    closeLoginModal();
-                    showToast("Admin Logado com Sucesso!");
-                    // O onAuthStateChanged vai lidar com o resto
-                })
-                .catch((error) => {
-                    console.error(error);
-                    alert("Erro ao entrar: " + error.message);
-                });
+            signInWithEmailAndPassword(auth, email, pass).then(() => {
+                closeModals();
+                showToast("Admin Logado!");
+            }).catch(e => alert("Erro: " + e.message));
         };
 
         window.logout = () => {
-            signOut(auth).then(() => {
-                showToast("Admin desconectado.");
-                // O onAuthStateChanged vai disparar e logar anônimo novamente
+            signOut(auth).then(() => showToast("Desconectado."));
+        };
+
+        // --- NAVEGAÇÃO ---
+        window.navigateTo = (screen) => {
+            ['home-screen', 'editor-screen', 'view-screen', 'minigame-screen'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById(id).classList.remove('flex');
             });
-        };
-
-        // --- NAVEGAÇÃO ENTRE TELAS ---
-
-        window.showHomeScreen = () => {
-            document.getElementById('editor-screen').classList.add('hidden');
-            document.getElementById('editor-screen').classList.remove('flex');
-            document.getElementById('view-screen').classList.add('hidden');
-            document.getElementById('view-screen').classList.remove('flex');
-            document.getElementById('home-screen').classList.remove('hidden');
-            window.scrollTo(0,0);
-            resetEditorState();
-        };
-
-        window.openTierView = (id) => {
-            window.currentModalId = id; 
-            const data = appState.communityData[id];
-            if (!data) return;
-
-            // Preenche Header
-            document.getElementById('view-title').innerText = data.title;
-            document.getElementById('view-creator').innerText = data.creatorName;
             
-            // Botões de Ação
-            const editBtn = document.getElementById('view-edit-btn');
-            const deleteBtn = document.getElementById('view-delete-btn');
-            
-            // Lógica de Permissão
-            const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
-            
-            // Editar: Dono ou Admin
-            if (isOwner || appState.isAdmin) {
-                editBtn.classList.remove('hidden');
-            } else {
-                editBtn.classList.add('hidden');
+            if (screen === 'home') {
+                document.getElementById('home-screen').classList.remove('hidden');
+                resetEditorState();
+            } else if (screen === 'minigame') {
+                const el = document.getElementById('minigame-screen');
+                el.classList.remove('hidden');
+                el.classList.add('flex');
             }
-            
-            // Excluir: APENAS Admin
-            if (appState.isAdmin) {
-                deleteBtn.classList.remove('hidden');
-            } else {
-                deleteBtn.classList.add('hidden');
-            }
-
-            // Renderiza Tier List
-            const container = document.getElementById('view-content');
-            container.innerHTML = '';
-
-            const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
-            const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${catPaths ? catPaths[0] : 'imagens/ninjas'}/`;
-
-            if (data.tiers) {
-                data.tiers.forEach(tier => {
-                    const row = document.createElement('div');
-                    row.className = 'flex border-b border-gray-700 bg-gray-900';
-                    let itemsHtml = '';
-                    if (tier.items) {
-                        itemsHtml = tier.items.map(name => `
-                            <div class="draggable-item static-item border-none shadow-none bg-transparent">
-                                <div class="ninja-image" style="background-image: url('${baseUrl}${name}.png')"></div>
-                                <div class="ninja-name">${name}</div>
-                            </div>
-                        `).join('');
-                    }
-                    
-                    row.innerHTML = `
-                        <div class="tier-label" style="background-color: ${tier.color};">${tier.label}</div>
-                        <div class="tier-content bg-[#111]">${itemsHtml}</div>
-                    `;
-                    container.appendChild(row);
-                });
-            }
-
-            // Troca de Tela
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('editor-screen').classList.add('hidden');
-            document.getElementById('editor-screen').classList.remove('flex');
-            
-            const viewScreen = document.getElementById('view-screen');
-            viewScreen.classList.remove('hidden');
-            viewScreen.classList.add('flex');
             window.scrollTo(0,0);
         };
 
-        window.openCategoryModal = () => {
-            document.getElementById('category-modal').classList.remove('hidden');
-        };
+        // ==========================================
+        // LÓGICA DO MINI GAME (BATALHA EQUILIBRADA MENSAL)
+        // ==========================================
+        
+        window.openMiniGameSetup = () => document.getElementById('minigame-setup-modal').classList.remove('hidden');
 
-        window.closeCategoryModal = () => {
-            document.getElementById('category-modal').classList.add('hidden');
-        };
+        // GERA A DATA ATUAL NO FORMATO YYYY-MM
+        function getCurrentMonthId() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        }
 
-        window.startEditor = async (category) => {
-            closeCategoryModal();
+        // CARREGA MESES DISPONÍVEIS DO BANCO
+        async function loadAvailableMonths(category) {
+            try {
+                const docSnap = await getDoc(doc(db, "meta", "battles"));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const months = data[`months_${category}`] || [];
+                    return months.sort().reverse();
+                }
+            } catch (e) { console.error("Erro meta meses:", e); }
+            return [];
+        }
+
+        async function initMonthSelector(category) {
+            const selector = document.getElementById('month-selector');
+            selector.innerHTML = '';
+            
+            let months = await loadAvailableMonths(category);
+            const current = getCurrentMonthId();
+            
+            // Garante que o mês atual esteja na lista mesmo se não tiver no banco ainda
+            if (!months.includes(current)) {
+                months.unshift(current);
+            }
+            
+            // Remove duplicatas e ordena
+            months = [...new Set(months)].sort().reverse();
+
+            months.forEach(m => {
+                const [y, monthNum] = m.split('-');
+                const date = new Date(parseInt(y), parseInt(monthNum) - 1, 1);
+                const label = date.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                
+                const opt = document.createElement('option');
+                opt.value = m;
+                opt.innerText = label.charAt(0).toUpperCase() + label.slice(1);
+                selector.appendChild(opt);
+            });
+            
+            selector.value = current;
+            appState.rankingMonth = current;
+        }
+
+        window.startMiniGame = async (category) => {
+            closeModals();
             appState.currentCategory = category;
-            appState.currentDocId = null; 
+            appState.rankingMonth = getCurrentMonthId(); // Inicia com mês atual
             
-            document.getElementById('home-screen').classList.add('hidden');
-            document.getElementById('view-screen').classList.add('hidden');
-            document.getElementById('view-screen').classList.remove('flex');
+            document.getElementById('game-category-title').innerText = category.charAt(0).toUpperCase() + category.slice(1);
             
-            const editor = document.getElementById('editor-screen');
-            editor.classList.remove('hidden');
-            editor.classList.add('flex');
+            // Inicializa seletor
+            await initMonthSelector(category);
             
-            document.getElementById('category-display').innerText = category.charAt(0).toUpperCase() + category.slice(1);
+            navigateTo('minigame');
             
-            document.getElementById('tier-title').value = "";
-            initBoard();
             await loadImagesForCategory(category);
+            // Carrega stats do mês ATUAL para balanceamento
+            await loadBattleStats(category, getCurrentMonthId()); 
+            pickNextBattle();
+            updateRankingUI();
         };
 
-        function resetEditorState() {
-            appState.currentDocId = null;
+        window.changeRankingMonth = async (monthId) => {
+            appState.rankingMonth = monthId;
+            // Recarrega stats para o mês selecionado para exibição na tabela
+            await loadBattleStats(appState.currentCategory, monthId);
+            updateRankingUI();
+        };
+
+        async function loadBattleStats(category, monthId) {
+            // Agora filtrando por mês e categoria (usando filtragem no cliente para evitar indice complexo imediato)
+            // Ideal: where('category', '==', category).where('month', '==', monthId)
+            // Se der erro de indice, o Firestore avisa no console.
+            const q = query(collection(db, "battles"), 
+                where('category', '==', category),
+                where('month', '==', monthId)
+            );
+            
+            try {
+                const snapshot = await getDocs(q);
+                appState.battleStats = {};
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    appState.battleStats[data.name] = data;
+                });
+            } catch (e) { 
+                console.error("Erro stats:", e); 
+                if(e.message.includes("index")) alert("Aguarde, o índice do banco de dados está sendo criado...");
+            }
         }
 
-        // --- EDITOR LOGIC ---
+        // --- SISTEMA DE HISTÓRICO LOCAL ---
+        function getSeenBattles() {
+            if (!appState.currentUser) return new Set();
+            const key = `seen_${appState.currentUser.uid}_${appState.currentCategory}_${getCurrentMonthId()}`;
+            const stored = localStorage.getItem(key);
+            return stored ? new Set(JSON.parse(stored)) : new Set();
+        }
 
-        const defaultTiers = [
-            { label: 'S', color: '#ff7f7f' },
-            { label: 'A', color: '#ffbf7f' },
-            { label: 'B', color: '#ffdf7f' },
-            { label: 'C', color: '#ffff7f' },
-            { label: 'D', color: '#bfff7f' }
-        ];
+        function markBattleSeen(n1, n2) {
+            if (!appState.currentUser) return;
+            const key = `seen_${appState.currentUser.uid}_${appState.currentCategory}_${getCurrentMonthId()}`;
+            const set = getSeenBattles();
+            const pairId = [n1, n2].sort().join('::'); 
+            set.add(pairId);
+            localStorage.setItem(key, JSON.stringify([...set]));
+        }
 
-        window.addTierRow = (label = 'New', color = '#cccccc', contentItems = []) => {
-            const board = document.getElementById('tier-board');
-            const row = document.createElement('div');
-            row.className = 'flex border-b border-gray-600 bg-gray-900 tier-row';
+        window.pickNextBattle = () => {
+            const category = appState.currentCategory;
+            const allImages = appState.imagesCache[category];
+            if (!allImages || allImages.length < 2) return alert("Poucas imagens para batalha.");
+
+            const seen = getSeenBattles();
+
+            const pool = allImages.map(img => {
+                const name = img.name.replace(/\.[^/.]+$/, "");
+                const stats = appState.battleStats[name] || { battles: 0, wins: 0 };
+                return { name: name, url: img.download_url, battles: stats.battles || 0 };
+            });
+
+            pool.sort((a, b) => a.battles - b.battles);
+
+            let fighterA, fighterB;
+
+            for (let i = 0; i < pool.length; i++) {
+                const candidateA = pool[i];
+                for (let j = 0; j < pool.length; j++) {
+                    if (i === j) continue;
+                    const candidateB = pool[j];
+                    const pairId = [candidateA.name, candidateB.name].sort().join('::');
+                    if (!seen.has(pairId)) {
+                        fighterA = candidateA;
+                        fighterB = candidateB;
+                        break;
+                    }
+                }
+                if (fighterA) break;
+            }
+
+            if (!fighterA) {
+                 const minBattles = pool[0].battles;
+                 const candidatesA = pool.filter(p => p.battles === minBattles);
+                 fighterA = candidatesA[Math.floor(Math.random() * candidatesA.length)];
+                 let candidatesB = pool.filter(p => p.name !== fighterA.name).slice(0, Math.max(5, pool.length / 5));
+                 fighterB = candidatesB[Math.floor(Math.random() * candidatesB.length)];
+            }
+
+            appState.currentFighters = [fighterA, fighterB];
+            renderFighter(1, fighterA);
+            renderFighter(2, fighterB);
+        };
+
+        window.skipBattle = () => {
+            if(appState.currentFighters.length === 2) {
+                markBattleSeen(appState.currentFighters[0].name, appState.currentFighters[1].name);
+            }
+            pickNextBattle();
+        };
+
+        function renderFighter(slot, fighter) {
+            const el = document.getElementById(`fighter-${slot}`);
+            el.querySelector('.ninja-image').style.backgroundImage = `url('${fighter.url}')`;
+            el.querySelector('.ninja-name').innerText = fighter.name;
+            el.classList.remove('ring-4', 'ring-green-500', 'opacity-50');
+        }
+
+        window.voteBattle = async (winnerSlot) => {
+            const loading = document.getElementById('battle-loading');
+            loading.classList.remove('hidden');
             
-            row.innerHTML = `
-                <div class="tier-label" style="background-color: ${color};" contenteditable="true" spellcheck="false" 
-                     onblur="this.style.backgroundColor = this.nextElementSibling.nextElementSibling.querySelector('input').value">
-                    ${label}
-                </div>
-                <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
-                <div class="tier-controls">
-                    <button onclick="moveRow(this, -1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-up"></i></button>
-                    <div class="relative group h-4 w-4">
-                        <i class="fas fa-palette text-gray-400 hover:text-white text-xs cursor-pointer absolute inset-0 text-center"></i>
-                        <input type="color" value="${color}" 
-                            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
-                            oninput="this.parentElement.parentElement.parentElement.querySelector('.tier-label').style.backgroundColor = this.value">
-                    </div>
-                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
-                    <button onclick="moveRow(this, 1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
-                </div>
-            `;
-            board.appendChild(row);
+            const winner = appState.currentFighters[winnerSlot - 1];
+            const loser = appState.currentFighters[winnerSlot === 1 ? 1 : 0];
+            const category = appState.currentCategory;
+            const currentMonth = getCurrentMonthId(); // SEMPRE salva no mês atual
 
-            if (contentItems && contentItems.length > 0) {
-                const contentDiv = row.querySelector('.tier-content');
-                contentItems.forEach(itemName => {
-                    let itemEl = document.querySelector(`#image-bank .draggable-item[data-name="${itemName}"]`);
-                    if (!itemEl) {
-                         itemEl = createDraggableElement(itemName, getImageUrl(itemName));
-                    }
-                    if (itemEl) {
-                        contentDiv.appendChild(itemEl);
-                    }
-                });
+            markBattleSeen(winner.name, loser.name);
+
+            // ID do documento agora inclui o Mês
+            const winnerRef = doc(db, "battles", `${category}_${currentMonth}_${winner.name}`);
+            const loserRef = doc(db, "battles", `${category}_${currentMonth}_${loser.name}`);
+            const metaRef = doc(db, "meta", "battles");
+
+            try {
+                const winnerUpdate = { 
+                    battles: increment(1), 
+                    wins: increment(1),
+                    name: winner.name,
+                    category: category,
+                    month: currentMonth
+                };
+                winnerUpdate[`beat.${loser.name}`] = increment(1); 
+
+                const loserUpdate = { 
+                    battles: increment(1),
+                    name: loser.name,
+                    category: category,
+                    month: currentMonth
+                };
+                loserUpdate[`lost_to.${winner.name}`] = increment(1); 
+
+                await Promise.all([
+                    setDoc(winnerRef, winnerUpdate, { merge: true }),
+                    setDoc(loserRef, loserUpdate, { merge: true }),
+                    setDoc(metaRef, { [`months_${category}`]: arrayUnion(currentMonth) }, { merge: true })
+                ]);
+
+                // Atualiza Cache SE estivermos vendo o mês atual
+                if (appState.rankingMonth === currentMonth) {
+                    updateLocalStats(winner.name, true, loser.name);
+                    updateLocalStats(loser.name, false, winner.name);
+                    updateRankingUI();
+                }
+
+                showToast(`Voto registrado para ${winner.name}!`);
+                pickNextBattle();
+
+            } catch(e) {
+                console.error(e);
+                alert("Erro ao salvar voto: " + e.message);
+            } finally {
+                loading.classList.add('hidden');
             }
         };
 
-        function initBoard() {
-            document.getElementById('tier-board').innerHTML = '';
-            defaultTiers.forEach(t => window.addTierRow(t.label, t.color));
+        function updateLocalStats(name, won, opponentName) {
+            if(!appState.battleStats[name]) appState.battleStats[name] = { battles: 0, wins: 0, beat: {}, lost_to: {} };
+            const s = appState.battleStats[name];
+            s.battles++;
+            if(won) {
+                s.wins++;
+                s.beat = s.beat || {};
+                s.beat[opponentName] = (s.beat[opponentName] || 0) + 1;
+            } else {
+                s.lost_to = s.lost_to || {};
+                s.lost_to[opponentName] = (s.lost_to[opponentName] || 0) + 1;
+            }
         }
 
-        // --- IMAGE LOADER ---
+        function findMaxKey(obj) {
+            if (!obj) return "-";
+            let maxKey = "-";
+            let maxValue = 0;
+            for (const [key, value] of Object.entries(obj)) {
+                if (value > maxValue) {
+                    maxValue = value;
+                    maxKey = key;
+                }
+            }
+            return maxKey !== "-" ? `${maxKey} (${maxValue})` : "-";
+        }
 
-        async function loadImagesForCategory(category) {
-            const bank = document.getElementById('image-bank');
-            bank.innerHTML = '';
-            
-            if (appState.imagesCache[category]) {
-                renderImagesToBank(appState.imagesCache[category]);
+        // --- ATUALIZAÇÃO DO RANKING COMPLETO (TABELA) ---
+        function updateRankingUI() {
+            const tbody = document.getElementById('game-ranking-body');
+            tbody.innerHTML = '';
+
+            const ranking = Object.values(appState.battleStats)
+                // O filtro de mês já foi feito no loadBattleStats (query firestore)
+                .map(item => {
+                    const wins = item.wins || 0;
+                    const battles = item.battles || 0;
+                    const losses = battles - wins;
+                    const winRate = battles > 0 ? ((wins / battles) * 100).toFixed(1) : 0;
+                    const victim = findMaxKey(item.beat);
+                    const nemesis = findMaxKey(item.lost_to);
+                    
+                    return { ...item, wins, battles, losses, winRate, victim, nemesis };
+                })
+                .sort((a, b) => b.wins - a.wins); // Ordena por vitórias
+
+            if(ranking.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Nenhuma batalha registrada neste mês.</td></tr>';
                 return;
             }
 
-            const loader = document.getElementById('loading-indicator');
-            loader.classList.remove('hidden');
-            
-            const paths = CATEGORY_PATHS[category] || ['imagens/ninjas']; 
-            let found = false;
-
-            for (const path of paths) {
-                const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
-                try {
-                    const response = await fetch(apiUrl);
-                    if (response.ok) {
-                        const files = await response.json();
-                        const imageFiles = files.filter(f => f.name.match(/\.(png|jpg|jpeg|gif)$/i));
-                        
-                        if (imageFiles.length > 0) {
-                            appState.imagesCache[category] = imageFiles; 
-                            renderImagesToBank(imageFiles);
-                            found = true;
-                            break; 
-                        }
-                    }
-                } catch (e) {
-                    console.log(`Erro path ${path}`, e);
-                }
-            }
-
-            loader.classList.add('hidden');
-            if (!found) {
-                document.getElementById('error-message').innerText = "Nenhuma imagem encontrada.";
-                document.getElementById('error-message').classList.remove('hidden');
-            } else {
-                document.getElementById('error-message').classList.add('hidden');
-            }
-        }
-
-        function renderImagesToBank(files) {
-            const bank = document.getElementById('image-bank');
-            files.forEach((file, index) => {
-                const name = file.name.replace(/\.[^/.]+$/, "");
-                if (document.querySelector(`.draggable-item[data-name="${name}"]`)) return;
-                const el = createDraggableElement(name, file.download_url, index);
-                bank.appendChild(el);
-            });
-        }
-
-        function createDraggableElement(name, url, index = 0) {
-            const div = document.createElement('div');
-            div.className = 'draggable-item';
-            div.draggable = true;
-            div.id = `item-${name}-${index}-${Date.now()}`;
-            div.dataset.name = name;
-            div.dataset.url = url; 
-            
-            div.innerHTML = `
-                <div class="ninja-image" style="background-image: url('${url}')"></div>
-                <div class="ninja-name">${name}</div>
-            `;
-            
-            div.addEventListener('dragstart', (e) => {
-                e.dataTransfer.setData("text/plain", e.target.id);
-                e.target.style.opacity = '0.5';
-            });
-            div.addEventListener('dragend', (e) => e.target.style.opacity = '1');
-            return div;
-        }
-
-        function getImageUrl(name) {
-            if (appState.imagesCache[appState.currentCategory]) {
-                const file = appState.imagesCache[appState.currentCategory].find(f => f.name.startsWith(name));
-                if (file) return file.download_url;
-            }
-            const path = CATEGORY_PATHS[appState.currentCategory][0];
-            return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${path}/${name}.png`;
-        }
-
-        // --- DRAG AND DROP & HELPERS ---
-        window.allowDrop = (ev) => ev.preventDefault();
-        window.drop = (ev) => {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text/plain");
-            const draggedElement = document.getElementById(data);
-            if (!draggedElement) return;
-
-            let target = ev.target;
-            if (target.closest('.draggable-item')) target = target.closest('.draggable-item').parentElement;
-            
-            if (target && (target.classList.contains('tier-content') || target.id === 'image-bank')) {
-                target.appendChild(draggedElement);
-            }
-        };
-        
-        window.deleteRow = (btn) => {
-            if(confirm('Apagar linha?')) {
-                const row = btn.closest('.tier-row');
-                const items = row.querySelectorAll('.draggable-item');
-                const bank = document.getElementById('image-bank');
-                items.forEach(item => bank.appendChild(item));
-                row.remove();
-            }
-        };
-        window.moveRow = (btn, dir) => {
-            const row = btn.closest('.tier-row');
-            const board = document.getElementById('tier-board');
-            if (dir === -1 && row.previousElementSibling) board.insertBefore(row, row.previousElementSibling);
-            else if (dir === 1 && row.nextElementSibling) board.insertBefore(row.nextElementSibling, row);
-        };
-
-        // --- SALVAR, EDITAR E EXCLUIR ---
-
-        window.saveTierList = async () => {
-            if (!appState.currentUser) { alert("Conectando..."); return; }
-            const title = document.getElementById('tier-title').value.trim();
-            const creator = document.getElementById('creator-name').value.trim();
-
-            if (!title || !creator) { alert("Preencha Título e Nick."); return; }
-
-            const rows = document.querySelectorAll('.tier-row');
-            const tiersData = [];
-            rows.forEach(row => {
-                const label = row.querySelector('.tier-label');
-                const content = row.querySelector('.tier-content');
-                const items = [];
-                content.querySelectorAll('.draggable-item').forEach(i => items.push(i.dataset.name));
-                tiersData.push({
-                    label: label.innerText.trim(),
-                    color: label.style.backgroundColor,
-                    items: items
-                });
-            });
-
-            const payload = {
-                title: title,
-                creatorName: creator,
-                tiers: tiersData,
-                category: appState.currentCategory,
-                userId: appState.currentUser.uid,
-                updatedAt: serverTimestamp(),
-                version: 3
-            };
-
-            try {
-                let docId;
-                if (appState.currentDocId) {
-                    const docRef = doc(db, "tierlists", appState.currentDocId);
-                    await updateDoc(docRef, payload);
-                    docId = appState.currentDocId;
-                    showToast("Salvo!");
-                } else {
-                    payload.createdAt = serverTimestamp();
-                    payload.votes = 0;
-                    payload.voterIds = [];
-                    const docRef = await addDoc(collection(db, "tierlists"), payload);
-                    docId = docRef.id;
-                    showToast("Criado!");
-                }
-
-                appState.communityData[docId] = { ...payload, id: docId, votes: payload.votes || 0 };
-                window.openTierView(docId);
+            ranking.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-gray-800 border-b border-gray-700' : 'bg-gray-700 border-b border-gray-600';
                 
-            } catch (e) {
-                console.error(e);
-                alert("Erro: " + e.message);
-            }
-        };
+                let wrClass = "text-gray-400";
+                if(item.winRate >= 70) wrClass = "text-green-400 font-bold";
+                else if(item.winRate <= 30) wrClass = "text-red-400";
 
-        window.editCurrentTierList = async () => {
-            const id = window.currentModalId;
-            const data = appState.communityData[id];
-            
-            if (!data) return;
-            
-            await startEditor(data.category || 'ninjas');
-            
-            appState.currentDocId = id;
-            document.getElementById('tier-title').value = data.title;
-            document.getElementById('creator-name').value = data.creatorName;
-            
-            const board = document.getElementById('tier-board');
-            board.innerHTML = '';
-            
-            if (Array.isArray(data.tiers)) {
-                data.tiers.forEach(t => {
-                    addTierRow(t.label, t.color, t.items);
-                });
-            }
-            showToast("Editando...");
-        };
+                row.innerHTML = `
+                    <td class="px-6 py-4 text-center font-bold ${index < 3 ? 'text-yellow-500' : 'text-gray-500'}">${index+1}</td>
+                    <td class="px-6 py-4 font-medium text-white whitespace-nowrap">${item.name}</td>
+                    <td class="px-6 py-4 text-center text-green-400 font-bold">${item.wins}</td>
+                    <td class="px-6 py-4 text-center text-red-400">${item.losses}</td>
+                    <td class="px-6 py-4 text-center text-blue-300 font-mono">${item.battles}</td>
+                    <td class="px-6 py-4 text-center ${wrClass}">${item.winRate}%</td>
+                    <td class="px-6 py-4 text-left text-xs text-gray-300">${item.victim}</td>
+                    <td class="px-6 py-4 text-left text-xs text-gray-300">${item.nemesis}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
 
-        window.deleteCurrentTierList = async () => {
-            const id = window.currentModalId;
-            if(!confirm("Tem certeza que deseja EXCLUIR esta Tier List?")) return;
-
-            try {
-                await deleteDoc(doc(db, "tierlists", id));
-                showToast("Tier List Excluída.");
-                showHomeScreen();
-            } catch (e) {
-                console.error(e);
-                alert("Erro ao excluir: " + e.message);
-            }
-        };
-
-        // --- GRID E VOTOS ---
+        // ==========================================
+        // SISTEMA TIER LIST (GRID & EDITOR)
+        // ==========================================
 
         const q = query(collection(db, "tierlists"), orderBy("votes", "desc"));
         onSnapshot(q, (snapshot) => {
+            appState.communitySnapshot = []; 
+            snapshot.forEach(doc => {
+                appState.communitySnapshot.push({ id: doc.id, ...doc.data() });
+            });
+            renderCommunityGrid();
+        });
+
+        window.renderCommunityGrid = () => {
             const grid = document.getElementById('community-grid');
+            if(!appState.communitySnapshot) return;
             grid.innerHTML = '';
             
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data();
-                const id = docSnap.id;
+            appState.communitySnapshot.forEach(data => {
+                const id = data.id;
                 appState.communityData[id] = data; 
-                
                 const card = document.createElement('div');
                 card.className = "bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition cursor-pointer flex flex-col group relative";
                 card.onclick = () => window.openTierView(id);
@@ -795,9 +790,7 @@
 
                 let previewHtml = `<div class="bg-black h-24 flex items-center justify-center gap-1 p-2">`;
                 if (topItems.length > 0) {
-                    topItems.forEach(item => {
-                        previewHtml += `<div class="w-12 h-12 bg-cover bg-center rounded border border-gray-600" style="background-image: url('${baseUrl}${item}.png')"></div>`;
-                    });
+                    topItems.forEach(item => previewHtml += `<div class="w-12 h-12 bg-cover bg-center rounded border border-gray-600" style="background-image: url('${baseUrl}${item}.png')"></div>`);
                 } else {
                     previewHtml += `<span class="text-gray-600 text-xs">Vazio</span>`;
                 }
@@ -805,28 +798,15 @@
 
                 let actionBtns = '';
                 const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
-                
                 let btnsHtml = '';
                 
-                // Editar: Dono ou Admin
                 if (isOwner || appState.isAdmin) {
-                    btnsHtml += `
-                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Editar">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>`;
+                    btnsHtml += `<button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full text-xs shadow-md mx-1"><i class="fas fa-pencil-alt"></i></button>`;
                 }
-                
-                // Excluir: APENAS Admin
                 if (appState.isAdmin) {
-                    btnsHtml += `
-                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; deleteCurrentTierList()" class="bg-black bg-opacity-70 text-red-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Excluir">
-                            <i class="fas fa-trash"></i>
-                        </button>`;
+                    btnsHtml += `<button onclick="event.stopPropagation(); window.currentModalId='${id}'; deleteCurrentTierList()" class="bg-black bg-opacity-70 text-red-500 hover:text-white p-1.5 rounded-full text-xs shadow-md mx-1"><i class="fas fa-trash"></i></button>`;
                 }
-
-                if (btnsHtml) {
-                    actionBtns = `<div class="absolute top-2 right-2 flex gap-1 z-20">${btnsHtml}</div>`;
-                }
+                if (btnsHtml) actionBtns = `<div class="absolute top-2 right-2 flex z-20">${btnsHtml}</div>`;
 
                 const isVoted = data.voterIds && appState.currentUser && data.voterIds.includes(appState.currentUser.uid);
                 const voteClass = isVoted ? "text-green-500" : "text-gray-400 hover:text-yellow-500";
@@ -852,49 +832,200 @@
                 `;
                 grid.appendChild(card);
             });
-            
-            if (grid.innerHTML === '') grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Nenhuma Tier List encontrada. Seja o primeiro!</div>';
-        });
+            if (grid.innerHTML === '') grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Nenhuma Tier List encontrada.</div>';
+        };
 
-        window.vote = async (docId) => {
-            if (!appState.currentUser) return;
-            const docRef = doc(db, "tierlists", docId);
-            try {
-                await updateDoc(docRef, { 
-                    votes: increment(1),
-                    voterIds: arrayUnion(appState.currentUser.uid)
+        // --- OUTRAS FUNÇÕES (Editor, Visualização, etc.) ---
+        window.openCategoryModal = () => document.getElementById('category-modal').classList.remove('hidden');
+        window.showHomeScreen = () => navigateTo('home');
+        
+        window.startEditor = async (category) => {
+            closeModals();
+            appState.currentCategory = category;
+            appState.currentDocId = null;
+            
+            navigateTo('editor'); 
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('editor-screen').classList.remove('hidden');
+            document.getElementById('editor-screen').classList.add('flex');
+
+            document.getElementById('category-display').innerText = category.charAt(0).toUpperCase() + category.slice(1);
+            document.getElementById('tier-title').value = "";
+            initBoard();
+            await loadImagesForCategory(category);
+        };
+
+        const defaultTiers = [
+            { label: 'S', color: '#ff7f7f' }, { label: 'A', color: '#ffbf7f' },
+            { label: 'B', color: '#ffdf7f' }, { label: 'C', color: '#ffff7f' }, { label: 'D', color: '#bfff7f' }
+        ];
+
+        window.addTierRow = (label = 'New', color = '#cccccc', contentItems = []) => {
+            const board = document.getElementById('tier-board');
+            const row = document.createElement('div');
+            row.className = 'flex border-b border-gray-600 bg-gray-900 tier-row';
+            row.innerHTML = `
+                <div class="tier-label" style="background-color: ${color};" contenteditable="true" spellcheck="false" onblur="this.style.backgroundColor = this.nextElementSibling.nextElementSibling.querySelector('input').value">${label}</div>
+                <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="tier-controls">
+                    <button onclick="moveRow(this, -1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-up"></i></button>
+                    <div class="relative group h-4 w-4"><i class="fas fa-palette text-gray-400 hover:text-white text-xs cursor-pointer absolute inset-0 text-center"></i><input type="color" value="${color}" class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer" oninput="this.parentElement.parentElement.parentElement.querySelector('.tier-label').style.backgroundColor = this.value"></div>
+                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                    <button onclick="moveRow(this, 1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
+                </div>`;
+            board.appendChild(row);
+            if (contentItems && contentItems.length > 0) {
+                const contentDiv = row.querySelector('.tier-content');
+                contentItems.forEach(itemName => {
+                    let itemEl = createDraggableElement(itemName, getImageUrl(itemName));
+                    contentDiv.appendChild(itemEl);
                 });
-            } catch (e) { 
-                console.error("Voto falhou", e);
             }
         };
 
+        function initBoard() {
+            document.getElementById('tier-board').innerHTML = '';
+            defaultTiers.forEach(t => window.addTierRow(t.label, t.color));
+        }
+
+        async function loadImagesForCategory(category) {
+            const bank = document.getElementById('image-bank');
+            bank.innerHTML = '';
+            if (appState.imagesCache[category]) { renderImagesToBank(appState.imagesCache[category]); return; }
+            document.getElementById('loading-indicator').classList.remove('hidden');
+            const paths = CATEGORY_PATHS[category] || ['imagens/ninjas'];
+            let found = false;
+            for (const path of paths) {
+                try {
+                    const response = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`);
+                    if (response.ok) {
+                        const files = await response.json();
+                        const imageFiles = files.filter(f => f.name.match(/\.(png|jpg|jpeg|gif)$/i));
+                        if (imageFiles.length > 0) {
+                            appState.imagesCache[category] = imageFiles;
+                            renderImagesToBank(imageFiles);
+                            found = true; break;
+                        }
+                    }
+                } catch (e) {}
+            }
+            document.getElementById('loading-indicator').classList.add('hidden');
+            if(!found) document.getElementById('error-message').classList.remove('hidden');
+        }
+
+        function renderImagesToBank(files) {
+            const bank = document.getElementById('image-bank');
+            files.forEach((file, index) => {
+                const name = file.name.replace(/\.[^/.]+$/, "");
+                if (document.querySelector(`.draggable-item[data-name="${name}"]`)) return;
+                bank.appendChild(createDraggableElement(name, file.download_url, index));
+            });
+        }
+
+        function createDraggableElement(name, url, index = 0) {
+            const div = document.createElement('div');
+            div.className = 'draggable-item'; div.draggable = true; div.id = `item-${name}-${index}-${Date.now()}`;
+            div.dataset.name = name; div.dataset.url = url;
+            div.innerHTML = `<div class="ninja-image" style="background-image: url('${url}')"></div><div class="ninja-name">${name}</div>`;
+            div.addEventListener('dragstart', (e) => { e.dataTransfer.setData("text/plain", e.target.id); e.target.style.opacity = '0.5'; });
+            div.addEventListener('dragend', (e) => e.target.style.opacity = '1');
+            return div;
+        }
+
+        function getImageUrl(name) {
+            if (appState.imagesCache[appState.currentCategory]) {
+                const file = appState.imagesCache[appState.currentCategory].find(f => f.name.startsWith(name));
+                if (file) return file.download_url;
+            }
+            return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${CATEGORY_PATHS[appState.currentCategory][0]}/${name}.png`;
+        }
+
+        window.allowDrop = (ev) => ev.preventDefault();
+        window.drop = (ev) => {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text/plain");
+            const draggedElement = document.getElementById(data);
+            if (!draggedElement) return;
+            let target = ev.target;
+            if (target.closest('.draggable-item')) target = target.closest('.draggable-item').parentElement;
+            if (target && (target.classList.contains('tier-content') || target.id === 'image-bank')) target.appendChild(draggedElement);
+        };
+        window.deleteRow = (btn) => { if(confirm('Apagar linha?')) btn.closest('.tier-row').remove(); }; 
+        window.moveRow = (btn, dir) => {
+            const row = btn.closest('.tier-row');
+            if (dir === -1 && row.previousElementSibling) row.parentElement.insertBefore(row, row.previousElementSibling);
+            else if (dir === 1 && row.nextElementSibling) row.parentElement.insertBefore(row.nextElementSibling, row);
+        };
+
+        window.saveTierList = async () => {
+            if (!appState.currentUser) { alert("Conectando..."); return; }
+            const title = document.getElementById('tier-title').value.trim();
+            const creator = document.getElementById('creator-name').value.trim();
+            if (!title || !creator) { alert("Preencha Título e Nick."); return; }
+            const tiersData = [];
+            document.querySelectorAll('.tier-row').forEach(row => {
+                const items = [];
+                row.querySelector('.tier-content').querySelectorAll('.draggable-item').forEach(i => items.push(i.dataset.name));
+                tiersData.push({ label: row.querySelector('.tier-label').innerText.trim(), color: row.querySelector('.tier-label').style.backgroundColor, items: items });
+            });
+            const payload = { title, creatorName: creator, tiers: tiersData, category: appState.currentCategory, userId: appState.currentUser.uid, updatedAt: serverTimestamp() };
+            try {
+                let docId = appState.currentDocId;
+                if (docId) { await updateDoc(doc(db, "tierlists", docId), payload); showToast("Salvo!"); }
+                else { payload.createdAt = serverTimestamp(); payload.votes = 0; payload.voterIds = []; const ref = await addDoc(collection(db, "tierlists"), payload); docId = ref.id; showToast("Criado!"); }
+                appState.communityData[docId] = { ...payload, id: docId, votes: payload.votes || 0 };
+                window.openTierView(docId);
+            } catch (e) { alert("Erro: " + e.message); }
+        };
+
+        window.openTierView = (id) => {
+            window.currentModalId = id; const data = appState.communityData[id]; if (!data) return;
+            document.getElementById('view-title').innerText = data.title;
+            document.getElementById('view-creator').innerText = data.creatorName;
+            const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
+            document.getElementById('view-edit-btn').classList.toggle('hidden', !(isOwner || appState.isAdmin));
+            document.getElementById('view-delete-btn').classList.toggle('hidden', !appState.isAdmin);
+            const container = document.getElementById('view-content'); container.innerHTML = '';
+            const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
+            const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${catPaths ? catPaths[0] : 'imagens/ninjas'}/`;
+            if (data.tiers) data.tiers.forEach(tier => {
+                const row = document.createElement('div'); row.className = 'flex border-b border-gray-700 bg-gray-900';
+                const itemsHtml = (tier.items || []).map(name => `<div class="draggable-item static-item border-none shadow-none bg-transparent"><div class="ninja-image" style="background-image: url('${baseUrl}${name}.png')"></div><div class="ninja-name">${name}</div></div>`).join('');
+                row.innerHTML = `<div class="tier-label" style="background-color: ${tier.color};">${tier.label}</div><div class="tier-content bg-[#111]">${itemsHtml}</div>`;
+                container.appendChild(row);
+            });
+            navigateTo('view-screen'); document.getElementById('view-screen').classList.remove('hidden'); document.getElementById('view-screen').classList.add('flex');
+        };
+
+        window.editCurrentTierList = async () => {
+            const id = window.currentModalId; const data = appState.communityData[id]; if (!data) return;
+            await startEditor(data.category || 'ninjas');
+            appState.currentDocId = id; document.getElementById('tier-title').value = data.title; document.getElementById('creator-name').value = data.creatorName;
+            document.getElementById('tier-board').innerHTML = '';
+            if (Array.isArray(data.tiers)) data.tiers.forEach(t => window.addTierRow(t.label, t.color, t.items));
+            showToast("Editando...");
+        };
+
+        window.deleteCurrentTierList = async () => {
+            if(!confirm("Tem certeza?")) return;
+            try { await deleteDoc(doc(db, "tierlists", window.currentModalId)); showToast("Excluída."); showHomeScreen(); } catch (e) { alert(e.message); }
+        };
+
+        window.vote = async (docId) => {
+            if (!appState.currentUser) return;
+            try { await updateDoc(doc(db, "tierlists", docId), { votes: increment(1), voterIds: arrayUnion(appState.currentUser.uid) }); } catch (e) {}
+        };
+
         window.downloadTierListImage = () => {
-            const area = document.getElementById('view-capture-area');
-            html2canvas(area, {
-                useCORS: true,
-                backgroundColor: "#111",
-                scale: 2
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `NinTier-${Date.now()}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
+            html2canvas(document.getElementById('view-capture-area'), { useCORS: true, backgroundColor: "#111", scale: 2 }).then(canvas => {
+                const link = document.createElement('a'); link.download = `NinTier-${Date.now()}.png`; link.href = canvas.toDataURL(); link.click();
             });
         };
 
         function showToast(msg) {
-            const t = document.getElementById('toast');
-            t.innerText = msg;
-            t.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
+            const t = document.getElementById('toast'); t.innerText = msg;
+            t.classList.remove('translate-y-20', 'opacity-0'); setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
-        
-        window.refreshCommunityGrid = () => { 
-            const grid = document.getElementById('community-grid');
-            if(grid.innerHTML.includes("Carregando")) return; 
-        };
-
     </script>
 </body>
 </html>
