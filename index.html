@@ -4,25 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nin Online - Tier List Maker</title>
-    <!-- Tailwind CSS para Estilo Rápido e Bonito -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome para Ícones -->
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Estilos personalizados para o Drag and Drop */
-        .tier-row {
-            min-height: 100px;
-            transition: all 0.2s;
-        }
         .tier-label {
             width: 80px;
+            min-width: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
             font-size: 1.5rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            outline: none;
+            cursor: text;
         }
         .tier-content {
             flex-grow: 1;
@@ -30,20 +28,70 @@
             flex-wrap: wrap;
             gap: 0.5rem;
             padding: 0.5rem;
-            min-height: 100px;
+            min-height: 120px; /* Aumentei um pouco para caber os bonecos maiores */
             background-color: #1a1a1a;
+            align-items: flex-start; /* Alinha no topo */
         }
+        .tier-controls {
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #2d2d2d;
+            gap: 5px;
+            padding: 5px 0;
+        }
+        
+        /* NOVO ESTILO DOS NINJAS */
         .draggable-item {
-            width: 70px;
-            height: 70px;
+            width: 80px;  /* Mais largo */
+            height: 110px; /* Mais alto para caber o corpo todo */
             cursor: grab;
             transition: transform 0.1s;
-            background-size: cover;
-            background-position: center;
+            background-color: #333;
             border: 2px solid transparent;
-            border-radius: 4px;
+            border-radius: 6px;
             position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; /* Nome fica no final */
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
+        
+        /* A imagem do boneco */
+        .ninja-image {
+            width: 100%;
+            height: 100%;
+            background-size: contain; /* Mostra a imagem inteira sem cortar */
+            background-repeat: no-repeat;
+            background-position: center bottom; /* Personagem 'em pé' no fundo */
+            margin-bottom: 20px; /* Espaço para o nome */
+            
+            /* MELHORIA PIXEL PERFECT */
+            image-rendering: pixelated;       /* Padrão moderno */
+            image-rendering: -moz-crisp-edges; /* Firefox */
+            image-rendering: crisp-edges;      /* Outros */
+        }
+
+        /* O nome abaixo */
+        .ninja-name {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0,0,0,0.85);
+            color: #fff;
+            font-size: 10px;
+            text-align: center;
+            padding: 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-top: 1px solid #444;
+        }
+
         .draggable-item:hover {
             transform: scale(1.05);
             border-color: #fbbf24;
@@ -52,32 +100,8 @@
         .draggable-item:active {
             cursor: grabbing;
         }
-        
-        /* Tooltip simples com o nome ao passar o mouse */
-        .draggable-item:hover::after {
-            content: attr(data-name);
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            white-space: nowrap;
-            pointer-events: none;
-            z-index: 20;
-        }
 
-        /* Cores das Tiers */
-        .tier-s { background-color: #ff7f7f; color: #4a0000; }
-        .tier-a { background-color: #ffbf7f; color: #5c3a00; }
-        .tier-b { background-color: #ffdf7f; color: #5c4b00; }
-        .tier-c { background-color: #ffff7f; color: #555500; }
-        .tier-d { background-color: #bfff7f; color: #2d5500; }
-
-        /* Scrollbar personalizada */
+        /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #111; }
         ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
@@ -100,63 +124,56 @@
 
     <div class="container mx-auto p-4 md:p-8">
         
-        <!-- Área de Criação -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
             <!-- Coluna Esquerda: Tier List Board -->
             <div class="lg:col-span-2 space-y-6">
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <input type="text" id="tier-title" placeholder="Dê um nome para sua Tier List..." 
-                            class="bg-gray-900 text-white text-xl font-bold px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full mr-4">
-                        <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2">
-                            <i class="fas fa-save"></i> Salvar
-                        </button>
+                    
+                    <!-- Área de Inputs (Título e Nick) -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-4 items-end">
+                        <div class="flex-grow w-full">
+                            <label class="text-xs text-gray-400 font-bold ml-1">NOME DA TIER LIST *</label>
+                            <input type="text" id="tier-title" placeholder="Ex: Melhores Ninjas PvP..." 
+                                class="bg-gray-900 text-white text-lg font-bold px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
+                        </div>
+                        
+                        <div class="w-full md:w-48">
+                            <label class="text-xs text-gray-400 font-bold ml-1">SEU NICK *</label>
+                            <input type="text" id="creator-name" placeholder="Ex: Auriosh" maxlength="15"
+                                class="bg-gray-900 text-white text-lg px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
+                        </div>
+
+                        <div class="flex gap-2 w-full md:w-auto">
+                             <button onclick="addTierRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold transition text-sm h-[46px]" title="Adicionar Linha">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                            <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold transition flex items-center justify-center gap-2 h-[46px] flex-grow md:flex-grow-0">
+                                <i class="fas fa-save"></i> SALVAR
+                            </button>
+                         </div>
                     </div>
 
-                    <!-- As Tiers -->
+                    <!-- As Tiers (Geradas Dinamicamente) -->
                     <div id="tier-board" class="border border-gray-600 rounded overflow-hidden">
-                        <!-- S Rank -->
-                        <div class="flex border-b border-gray-600 bg-gray-900">
-                            <div class="tier-label tier-s">S</div>
-                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-S"></div>
-                        </div>
-                        <!-- A Rank -->
-                        <div class="flex border-b border-gray-600 bg-gray-900">
-                            <div class="tier-label tier-a">A</div>
-                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-A"></div>
-                        </div>
-                        <!-- B Rank -->
-                        <div class="flex border-b border-gray-600 bg-gray-900">
-                            <div class="tier-label tier-b">B</div>
-                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-B"></div>
-                        </div>
-                        <!-- C Rank -->
-                        <div class="flex border-b border-gray-600 bg-gray-900">
-                            <div class="tier-label tier-c">C</div>
-                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-C"></div>
-                        </div>
-                        <!-- D Rank -->
-                        <div class="flex border-b border-gray-600 bg-gray-900">
-                            <div class="tier-label tier-d">D</div>
-                            <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)" id="tier-D"></div>
-                        </div>
+                        <!-- Javascript vai preencher isso aqui -->
                     </div>
                 </div>
 
-                <!-- Banco de Imagens (Ninjas) -->
+                <!-- Banco de Imagens -->
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
                     <div class="flex justify-between items-center mb-2">
                         <h3 class="text-lg font-bold text-gray-300">Banco de Imagens</h3>
-                        <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Carregando do GitHub...</span>
+                        <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Procurando no GitHub...</span>
                     </div>
                     <div id="image-bank" class="flex flex-wrap gap-2 p-4 bg-gray-900 rounded min-h-[150px]" ondrop="drop(event)" ondragover="allowDrop(event)">
-                        <!-- Imagens serão injetadas aqui via JS -->
+                        <!-- Imagens -->
                     </div>
+                    <div id="error-message" class="text-red-400 text-xs p-2 hidden"></div>
                 </div>
             </div>
 
-            <!-- Coluna Direita: Comunidade / Votação -->
+            <!-- Coluna Direita: Comunidade -->
             <div class="lg:col-span-1">
                 <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 h-full flex flex-col">
                     <h2 class="text-xl font-bold text-yellow-500 mb-4 border-b border-gray-700 pb-2">
@@ -171,17 +188,16 @@
     </div>
 
     <!-- Modal de Feedback -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50">
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold">
         Salvo com sucesso!
     </div>
 
     <script type="module">
-        // Importando Firebase do CDN
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO FIREBASE (A sua config)
+        // CONFIGURAÇÃO DO FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDlO2KnSJR0RD3f2bn025qzAJa619lDY7M",
             authDomain: "tierlistninonline.firebaseapp.com",
@@ -192,13 +208,19 @@
             measurementId: "G-7JL99VSSH2"
         };
 
-        // --- CONFIGURAÇÃO AUTOMÁTICA GITHUB ---
+        // --- CONFIGURAÇÃO GITHUB ---
         const GITHUB_USER = "aurioshlookin";
         const GITHUB_REPO = "tierlistninonline";
-        const GITHUB_PATH = "imagens/ninjas"; // Caminho da pasta dentro do repo
-        
-        // Base URL para fallback
-        const BASE_IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${GITHUB_PATH}/`;
+        const PATHS_TO_TRY = [
+            "imagens/ninja",
+            "imagens/ninjas",  
+            "Imagens/Ninjas", 
+            "images/ninja", 
+            "ninjas",         
+            ""                
+        ];
+
+        let BASE_IMAGE_URL = "";
 
         // Inicializa Firebase
         const app = initializeApp(firebaseConfig);
@@ -206,162 +228,252 @@
         const db = getFirestore(app);
         let currentUser = null;
 
-        // Autenticação Anônima
-        signInAnonymously(auth)
-            .then(() => console.log("Logado anonimamente"))
-            .catch((error) => console.error(error));
-
+        signInAnonymously(auth).catch(console.error);
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                document.getElementById('auth-status').innerHTML = `<i class="fas fa-user-ninja text-green-400"></i> Ninja ID: ${user.uid.slice(0,6)}`;
+                document.getElementById('auth-status').innerHTML = `<i class="fas fa-user-ninja text-green-400"></i> ID: ${user.uid.slice(0,6)}`;
             }
         });
 
-        // --- LÓGICA DO TIER LIST (DRAG AND DROP) ---
-        
-        // NOVA FUNÇÃO: Carrega imagens direto da API do GitHub
-        async function loadNinjasFromGitHub() {
+        // --- GERENCIAMENTO DE TIERS ---
+        const defaultTiers = [
+            { label: 'S', color: '#ff7f7f' },
+            { label: 'A', color: '#ffbf7f' },
+            { label: 'B', color: '#ffdf7f' },
+            { label: 'C', color: '#ffff7f' },
+            { label: 'D', color: '#bfff7f' }
+        ];
+
+        window.addTierRow = (label = 'New', color = '#cccccc', contentIds = []) => {
+            const board = document.getElementById('tier-board');
+            const row = document.createElement('div');
+            row.className = 'flex border-b border-gray-600 bg-gray-900 tier-row';
+            
+            row.innerHTML = `
+                <div class="tier-label" style="background-color: ${color};" contenteditable="true" spellcheck="false" 
+                     onblur="this.style.backgroundColor = this.nextElementSibling.nextElementSibling.querySelector('input').value">
+                    ${label}
+                </div>
+                <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+                <div class="tier-controls">
+                    <button onclick="moveRow(this, -1)" class="text-gray-400 hover:text-white text-xs" title="Subir"><i class="fas fa-chevron-up"></i></button>
+                    <div class="relative group">
+                        <i class="fas fa-palette text-gray-400 hover:text-white text-xs cursor-pointer"></i>
+                        <input type="color" value="${color}" 
+                            class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
+                            oninput="this.parentElement.parentElement.parentElement.querySelector('.tier-label').style.backgroundColor = this.value">
+                    </div>
+                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-400 text-xs" title="Excluir"><i class="fas fa-trash"></i></button>
+                    <button onclick="moveRow(this, 1)" class="text-gray-400 hover:text-white text-xs" title="Descer"><i class="fas fa-chevron-down"></i></button>
+                </div>
+            `;
+            board.appendChild(row);
+
+            if (contentIds.length > 0) {
+                const contentDiv = row.querySelector('.tier-content');
+                contentIds.forEach(id => {
+                    // Tenta encontrar no banco primeiro
+                    const existingItem = document.querySelector(`.draggable-item[data-name="${id}"]`);
+                    if (existingItem) {
+                        contentDiv.appendChild(existingItem);
+                    }
+                });
+            }
+        };
+
+        window.deleteRow = (btn) => {
+            if(confirm('Apagar Tier? Os itens voltarão para o banco.')) {
+                const row = btn.closest('.tier-row');
+                const items = row.querySelectorAll('.draggable-item');
+                const bank = document.getElementById('image-bank');
+                items.forEach(item => bank.appendChild(item));
+                row.remove();
+            }
+        };
+
+        window.moveRow = (btn, direction) => {
+            const row = btn.closest('.tier-row');
+            const board = document.getElementById('tier-board');
+            if (direction === -1 && row.previousElementSibling) board.insertBefore(row, row.previousElementSibling);
+            else if (direction === 1 && row.nextElementSibling) board.insertBefore(row.nextElementSibling, row);
+        };
+
+        function initBoard() {
+            const board = document.getElementById('tier-board');
+            board.innerHTML = '';
+            defaultTiers.forEach(t => window.addTierRow(t.label, t.color));
+        }
+
+        // --- GITHUB IMAGES ---
+        async function loadNinjasFromGitHub(pathIndex = 0) {
             const bank = document.getElementById('image-bank');
             const loader = document.getElementById('loading-indicator');
+            const errorMsg = document.getElementById('error-message');
             
-            loader.classList.remove('hidden');
-            bank.innerHTML = ''; 
+            if (pathIndex === 0) {
+                loader.classList.remove('hidden');
+                errorMsg.classList.add('hidden');
+            }
 
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_PATH}`;
+            if (pathIndex >= PATHS_TO_TRY.length) {
+                loader.classList.add('hidden');
+                errorMsg.innerHTML = `Erro: Imagens não encontradas.`;
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            const path = PATHS_TO_TRY[pathIndex];
+            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
 
             try {
                 const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error(`Erro GitHub API: ${response.status}`);
+                if (response.status === 404) {
+                    await loadNinjasFromGitHub(pathIndex + 1);
+                    return;
+                }
                 
                 const files = await response.json();
-                
-                // Filtra apenas imagens e cria os elementos
                 const imageFiles = files.filter(file => file.name.match(/\.(png|jpg|jpeg|gif)$/i));
 
                 if (imageFiles.length === 0) {
-                    bank.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma imagem encontrada na pasta.</p>';
+                    await loadNinjasFromGitHub(pathIndex + 1);
+                    return;
                 }
 
+                // Sucesso
+                const pathPart = path ? `${path}/` : "";
+                BASE_IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${pathPart}`;
+
                 imageFiles.forEach((file, index) => {
-                    // Remove a extensão para usar como ID/Nome (Ex: "Auriosh.png" -> "Auriosh")
                     const ninjaName = file.name.replace(/\.[^/.]+$/, "");
+                    
+                    if(document.querySelector(`.draggable-item[data-name="${ninjaName}"]`)) return;
 
                     const div = document.createElement('div');
-                    div.className = 'draggable-item shadow-md bg-gray-700'; 
+                    div.className = 'draggable-item'; 
                     
-                    // Usa o download_url fornecido pela API do GitHub
-                    div.style.backgroundImage = `url('${file.download_url}')`; 
-                    
+                    // Estrutura interna para imagem completa + nome embaixo
+                    div.innerHTML = `
+                        <div class="ninja-image" style="background-image: url('${file.download_url}')"></div>
+                        <div class="ninja-name">${ninjaName}</div>
+                    `;
+
                     div.draggable = true;
-                    div.id = `ninja-${index}`; 
-                    div.dataset.name = ninjaName; // Nome sem .png
-                    div.dataset.fullUrl = file.download_url; // Guarda URL completa para uso futuro
+                    div.id = `ninja-${index}-${Date.now()}`; 
+                    div.dataset.name = ninjaName; 
 
                     div.addEventListener('dragstart', (e) => {
                         e.dataTransfer.setData("text/plain", e.target.id);
                         e.target.style.opacity = '0.5';
                     });
-
-                    div.addEventListener('dragend', (e) => {
-                        e.target.style.opacity = '1';
-                    });
+                    div.addEventListener('dragend', (e) => e.target.style.opacity = '1');
 
                     bank.appendChild(div);
                 });
+                
+                loader.classList.add('hidden');
 
             } catch (error) {
-                console.error("Falha ao carregar imagens do GitHub:", error);
-                bank.innerHTML = `<p class="text-red-400 text-xs">Erro ao carregar imagens do GitHub.<br>Verifique se o repositório é público.</p>`;
-            } finally {
-                loader.classList.add('hidden');
+                console.error(`Erro ao ler ${path}:`, error);
+                await loadNinjasFromGitHub(pathIndex + 1);
             }
         }
 
-        // Funções Globais
-        window.allowDrop = (ev) => {
-            ev.preventDefault();
-        };
-
+        // --- DRAG AND DROP ---
+        window.allowDrop = (ev) => ev.preventDefault();
         window.drop = (ev) => {
             ev.preventDefault();
             const data = ev.dataTransfer.getData("text/plain");
             const draggedElement = document.getElementById(data);
-            
+            if(!draggedElement) return;
+
             let target = ev.target;
-            if (target.classList.contains('draggable-item')) {
-                target = target.parentElement;
+            // Se soltou em cima de outro item ou do nome/imagem dentro do item
+            if (target.closest('.draggable-item')) {
+                // Opção A: Adicionar ao pai (tier content)
+                // target = target.closest('.tier-content') || target.closest('#image-bank');
+                // Opção B: (Melhor) Só jogar no container pai do alvo
+                target = target.closest('.draggable-item').parentElement;
             }
 
-            if (target.classList.contains('tier-content') || target.id === 'image-bank') {
+            if (target && (target.classList.contains('tier-content') || target.id === 'image-bank')) {
                 target.appendChild(draggedElement);
             }
         };
 
-        // --- LÓGICA DO FIREBASE (SALVAR E CARREGAR) ---
-
+        // --- SALVAR ---
         window.saveTierList = async () => {
             if (!currentUser) {
-                alert("Aguarde conectar ao servidor...");
+                alert("Conectando ao servidor...");
                 return;
             }
 
-            const titleInput = document.getElementById('tier-title');
-            const title = titleInput.value.trim() || "Sem Título";
+            const title = document.getElementById('tier-title').value.trim();
+            const creator = document.getElementById('creator-name').value.trim();
 
-            const tiersData = {
-                S: getIdsFromTier('tier-S'),
-                A: getIdsFromTier('tier-A'),
-                B: getIdsFromTier('tier-B'),
-                C: getIdsFromTier('tier-C'),
-                D: getIdsFromTier('tier-D')
-            };
+            if (!title) {
+                alert("Por favor, preencha o Nome da Tier List.");
+                document.getElementById('tier-title').focus();
+                return;
+            }
+            if (!creator) {
+                alert("Por favor, preencha o Seu Nick.");
+                document.getElementById('creator-name').focus();
+                return;
+            }
+            
+            const rows = document.querySelectorAll('.tier-row');
+            const tiersData = []; 
+
+            rows.forEach(row => {
+                const labelDiv = row.querySelector('.tier-label');
+                const contentDiv = row.querySelector('.tier-content');
+                const items = [];
+                contentDiv.querySelectorAll('.draggable-item').forEach(item => items.push(item.dataset.name));
+                
+                tiersData.push({
+                    label: labelDiv.innerText.trim(),
+                    color: labelDiv.style.backgroundColor,
+                    items: items
+                });
+            });
 
             try {
                 await addDoc(collection(db, "tierlists"), {
                     title: title,
-                    tiers: tiersData,
+                    creatorName: creator, // Salva o nick digitado
+                    tiers: tiersData, 
                     userId: currentUser.uid,
                     votes: 0,
-                    createdAt: serverTimestamp()
+                    voterIds: [], // Inicializa lista de votantes
+                    createdAt: serverTimestamp(),
+                    version: 2 
                 });
                 
-                showToast("Tier List salva e publicada!");
-                titleInput.value = "";
-                resetBoard();
+                showToast("Salvo com sucesso!");
+                document.getElementById('tier-title').value = "";
+                // Não limpamos o Nick para facilitar criar outra
+                
+                // Reset
+                const bank = document.getElementById('image-bank');
+                document.querySelectorAll('.draggable-item').forEach(item => bank.appendChild(item));
+                initBoard();
+
             } catch (e) {
-                console.error("Erro ao salvar: ", e);
+                console.error("Erro: ", e);
                 alert("Erro ao salvar: " + e.message);
             }
         };
-
-        function getIdsFromTier(elementId) {
-            const container = document.getElementById(elementId);
-            const items = container.getElementsByClassName('draggable-item');
-            const list = [];
-            for(let item of items) {
-                list.push(item.dataset.name);
-            }
-            return list;
-        }
-
-        function resetBoard() {
-            const bank = document.getElementById('image-bank');
-            const allItems = document.querySelectorAll('.draggable-item');
-            allItems.forEach(item => bank.appendChild(item));
-        }
 
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.innerText = msg;
             t.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => {
-                t.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
+            setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
 
-        // --- LISTAGEM E VOTAÇÃO ---
-
+        // --- FEED COMUNIDADE ---
         const q = query(collection(db, "tierlists"), orderBy("votes", "desc")); 
         
         onSnapshot(q, (snapshot) => {
@@ -375,27 +487,40 @@
                 const card = document.createElement('div');
                 card.className = "bg-gray-700 p-3 rounded border border-gray-600 hover:border-yellow-500 transition";
                 
+                let topTierItems = [];
+                if (Array.isArray(data.tiers)) {
+                    const firstNonEmpty = data.tiers.find(t => t.items && t.items.length > 0);
+                    if (firstNonEmpty) topTierItems = firstNonEmpty.items;
+                } else if (data.tiers && data.tiers.S) {
+                    topTierItems = data.tiers.S;
+                }
+
                 let sPreview = "";
-                if(data.tiers && data.tiers.S && data.tiers.S.length > 0) {
-                     const top3 = data.tiers.S.slice(0, 3);
-                     // Usa a URL base + nome + .png para reconstruir a imagem no feed
+                if(topTierItems.length > 0) {
+                     const top3 = topTierItems.slice(0, 3);
+                     const baseUrl = BASE_IMAGE_URL || `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/imagens/ninja/`;
+                     
                      sPreview = `<div class="flex gap-1 mb-2 mt-1">
-                        ${top3.map(name => `<div class="w-6 h-6 rounded bg-cover" style="background-image: url('${BASE_IMAGE_URL}${name}.png')"></div>`).join('')}
-                        ${data.tiers.S.length > 3 ? '<span class="text-xs text-gray-400 self-end">...</span>' : ''}
+                        ${top3.map(name => `<div class="w-8 h-8 rounded bg-cover border border-gray-800 bg-center" style="background-image: url('${baseUrl}${name}.png')"></div>`).join('')}
+                        ${topTierItems.length > 3 ? '<span class="text-xs text-gray-400 self-end">...</span>' : ''}
                      </div>`;
                 } else {
-                    sPreview = `<div class="text-xs text-gray-500 italic mb-2">Sem Rank S definido</div>`;
+                    sPreview = `<div class="text-xs text-gray-500 italic mb-2">Vazio</div>`;
                 }
+
+                // Verifica se já votei (apenas visual)
+                const alreadyVoted = data.voterIds && currentUser && data.voterIds.includes(currentUser.uid);
+                const voteColor = alreadyVoted ? "text-green-500" : "text-gray-400 hover:text-yellow-500";
 
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <h4 class="font-bold text-white text-lg">${data.title}</h4>
-                            <p class="text-xs text-gray-400">Criado por: Ninja-${data.userId ? data.userId.slice(0,4) : '?'}</p>
+                            <h4 class="font-bold text-white text-lg leading-tight mb-1">${data.title}</h4>
+                            <p class="text-xs text-gray-400">Criado por: <span class="text-yellow-500 font-bold">${data.creatorName || 'Anônimo'}</span></p>
                         </div>
-                        <div class="flex flex-col items-center">
-                            <button onclick="vote('${id}')" class="text-yellow-500 hover:text-white transition">
-                                <i class="fas fa-caret-up text-2xl"></i>
+                        <div class="flex flex-col items-center ml-2">
+                            <button onclick="vote('${id}')" class="${voteColor} transition p-1" ${alreadyVoted ? 'disabled' : ''}>
+                                <i class="fas fa-caret-up text-3xl"></i>
                             </button>
                             <span class="font-mono font-bold text-sm">${data.votes || 0}</span>
                         </div>
@@ -407,13 +532,41 @@
         });
 
         window.vote = async (docId) => {
+            if (!currentUser) {
+                alert("Aguarde conectar...");
+                return;
+            }
+
             const docRef = doc(db, "tierlists", docId);
-            await updateDoc(docRef, {
-                votes: increment(1)
-            });
+            
+            try {
+                // Verificação de segurança local (dupla checagem)
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    if (data.voterIds && data.voterIds.includes(currentUser.uid)) {
+                        alert("Você já votou nesta lista!");
+                        return;
+                    }
+                }
+
+                // Atualiza adicionando o ID ao array e incrementando voto
+                await updateDoc(docRef, { 
+                    votes: increment(1),
+                    voterIds: arrayUnion(currentUser.uid)
+                });
+                // O onSnapshot vai atualizar a cor do botão automaticamente
+            } catch (e) {
+                console.error("Erro ao votar:", e);
+                // Se falhar (ex: regra de segurança), avisa
+                if (e.code === 'permission-denied') {
+                     alert("Erro: Você já votou ou não tem permissão.");
+                }
+            }
         };
 
-        // Iniciar carregamento automático
+        // INICIALIZAÇÃO
+        initBoard();
         loadNinjasFromGitHub();
 
     </script>
