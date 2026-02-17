@@ -8,106 +8,67 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Html2Canvas para salvar imagens -->
+    <!-- Html2Canvas -->
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     
     <style>
+        /* --- ESTILOS GERAIS --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* --- EDITOR --- */
         .tier-label {
-            width: 80px;
-            min-width: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.5rem;
+            width: 80px; min-width: 80px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 1.5rem;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            outline: none;
-            cursor: text;
+            outline: none; cursor: text;
+            word-break: break-all; text-align: center;
+            line-height: 1.1;
         }
         .tier-content {
-            flex-grow: 1;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
-            padding: 0.5rem;
-            min-height: 120px; 
-            background-color: #1a1a1a;
+            flex-grow: 1; display: flex; flex-wrap: wrap;
+            gap: 0.5rem; padding: 0.5rem;
+            min-height: 120px; background-color: #1a1a1a;
             align-items: flex-start;
         }
         .tier-controls {
-            width: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #2d2d2d;
-            gap: 5px;
-            padding: 5px 0;
+            width: 40px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background-color: #2d2d2d; gap: 5px; padding: 5px 0;
         }
         
-        /* NOVO ESTILO DOS NINJAS */
+        /* --- ITENS (CARD DO PERSONAGEM) --- */
         .draggable-item {
-            width: 80px;
-            height: 110px;
-            cursor: grab;
-            transition: transform 0.1s;
+            width: 80px; height: 110px;
+            cursor: grab; transition: transform 0.1s;
             background-color: #333;
-            border: 2px solid transparent;
-            border-radius: 6px;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            overflow: hidden;
+            border: 2px solid transparent; border-radius: 6px;
+            position: relative; display: flex; flex-direction: column;
+            justify-content: flex-end; overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            flex-shrink: 0;
         }
-        
         .ninja-image {
-            width: 100%;
-            height: 100%;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center bottom;
-            margin-bottom: 20px;
-            
-            image-rendering: pixelated;       
-            image-rendering: -moz-crisp-edges; 
-            image-rendering: crisp-edges;      
+            width: 100%; height: 100%;
+            background-size: contain; background-repeat: no-repeat;
+            background-position: center bottom; margin-bottom: 20px;
+            image-rendering: pixelated; /* Pixel Perfect */
         }
-
         .ninja-name {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background-color: rgba(0,0,0,0.85);
-            color: #fff;
-            font-size: 10px;
-            text-align: center;
-            padding: 2px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background-color: rgba(0,0,0,0.85); color: #fff;
+            font-size: 10px; text-align: center; padding: 2px 0;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             border-top: 1px solid #444;
         }
-
         .draggable-item:hover {
-            transform: scale(1.05);
-            border-color: #fbbf24;
-            z-index: 10;
+            transform: scale(1.05); border-color: #fbbf24; z-index: 10;
         }
-        .draggable-item:active {
-            cursor: grabbing;
-        }
+        .draggable-item:active { cursor: grabbing; }
         
-        /* Estilos específicos para o item estático no modal (sem cursor grab) */
-        .static-item {
-            cursor: default !important;
-        }
-        .static-item:hover {
-            transform: none !important;
-            border-color: transparent !important;
-        }
+        /* --- VIEW MODE --- */
+        .static-item { cursor: default !important; }
+        .static-item:hover { transform: none !important; border-color: transparent !important; }
 
         /* Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
@@ -116,127 +77,186 @@
         ::-webkit-scrollbar-thumb:hover { background: #777; }
     </style>
 </head>
-<body class="bg-gray-900 text-white font-sans min-h-screen">
+<body class="bg-gray-900 text-white min-h-screen flex flex-col">
 
     <!-- Navbar -->
-    <nav class="bg-black border-b border-gray-800 p-4">
+    <nav class="bg-black border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-yellow-500">
-                <i class="fas fa-scroll mr-2"></i>Nin Online Tier Maker
-            </h1>
-            <div id="auth-status" class="text-sm text-gray-400">
-                <i class="fas fa-spinner fa-spin"></i> Conectando...
+            <div class="flex items-center gap-4">
+                <h1 class="text-2xl font-bold text-yellow-500 cursor-pointer flex items-center gap-2" onclick="showHomeScreen()">
+                    <i class="fas fa-scroll"></i> <span class="hidden md:inline">Nin Maker</span>
+                </h1>
+                
+                <!-- BOTÃO INÍCIO MELHORADO -->
+                <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-sm">
+                    <i class="fas fa-home"></i> Início
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="openCategoryModal()" class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-lg shadow-yellow-900/20">
+                    <i class="fas fa-plus"></i> Criar Nova
+                </button>
+                <div id="auth-status" class="text-xs text-gray-500 font-mono border-l border-gray-700 pl-4">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mx-auto p-4 md:p-8">
-        
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Coluna Esquerda: Tier List Board -->
-            <div class="lg:col-span-2 space-y-6">
+    <!-- MAIN CONTAINER -->
+    <div class="container mx-auto p-4 flex-grow flex flex-col relative">
+
+        <!-- ================= TELA INICIAL (HOME) ================= -->
+        <div id="home-screen" class="flex flex-col gap-6">
+            <div class="bg-gradient-to-r from-gray-800 to-gray-900 p-8 rounded-xl border border-gray-700 shadow-2xl text-center">
+                <h2 class="text-3xl font-bold text-white mb-2">Tier Lists da Comunidade</h2>
+                <p class="text-gray-400 mb-6">Descubra os melhores metas, ninjas e estratégias de Nin Online.</p>
+                <div class="flex justify-center gap-4">
+                    <button onclick="openCategoryModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-8 py-3 rounded-lg font-bold shadow-lg transform hover:scale-105 transition">
+                        Criar Minha Tier List
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid de Tier Lists -->
+            <div id="community-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="col-span-full text-center py-10 text-gray-500">
+                    <i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>Carregando comunidade...
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TELA DO EDITOR ================= -->
+        <div id="editor-screen" class="hidden flex-col lg:flex-row gap-6">
+            <!-- Coluna Esquerda: Board -->
+            <div class="flex-grow space-y-4">
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
-                    
-                    <!-- Área de Inputs (Título e Nick) -->
                     <div class="flex flex-col md:flex-row gap-4 mb-4 items-end">
                         <div class="flex-grow w-full">
-                            <label class="text-xs text-gray-400 font-bold ml-1">NOME DA TIER LIST *</label>
+                            <label class="text-[10px] uppercase text-gray-400 font-bold ml-1 tracking-wider">Nome da Tier List</label>
                             <input type="text" id="tier-title" placeholder="Ex: Melhores Ninjas PvP..." 
                                 class="bg-gray-900 text-white text-lg font-bold px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
                         </div>
-                        
-                        <div class="w-full md:w-48">
-                            <label class="text-xs text-gray-400 font-bold ml-1">SEU NICK *</label>
+                        <div class="w-full md:w-40">
+                            <label class="text-[10px] uppercase text-gray-400 font-bold ml-1 tracking-wider">Seu Nick</label>
                             <input type="text" id="creator-name" placeholder="Ex: Auriosh" maxlength="15"
                                 class="bg-gray-900 text-white text-lg px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
                         </div>
-
-                        <div class="flex gap-2 w-full md:w-auto">
-                             <button onclick="addTierRow()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold transition text-sm h-[46px]" title="Adicionar Linha">
+                        <div class="flex gap-2">
+                             <button onclick="addTierRow()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded font-bold transition h-[46px]" title="Adicionar Linha">
                                 <i class="fas fa-plus"></i>
                             </button>
-                            <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded font-bold transition flex items-center justify-center gap-2 h-[46px] flex-grow md:flex-grow-0">
+                            <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2 h-[46px]">
                                 <i class="fas fa-save"></i> SALVAR
                             </button>
                          </div>
                     </div>
 
-                    <!-- As Tiers (Geradas Dinamicamente) -->
-                    <div id="tier-board" class="border border-gray-600 rounded overflow-hidden">
-                        <!-- Javascript vai preencher isso aqui -->
-                    </div>
-                </div>
-
-                <!-- Banco de Imagens -->
-                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="text-lg font-bold text-gray-300">Banco de Imagens</h3>
-                        <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Procurando no GitHub...</span>
-                    </div>
-                    <div id="image-bank" class="flex flex-wrap gap-2 p-4 bg-gray-900 rounded min-h-[150px]" ondrop="drop(event)" ondragover="allowDrop(event)">
-                        <!-- Imagens -->
-                    </div>
-                    <div id="error-message" class="text-red-400 text-xs p-2 hidden"></div>
+                    <!-- Tier Board -->
+                    <div id="tier-board" class="border border-gray-600 rounded overflow-hidden bg-black"></div>
                 </div>
             </div>
 
-            <!-- Coluna Direita: Comunidade -->
-            <div class="lg:col-span-1">
-                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-4 h-full flex flex-col">
-                    <h2 class="text-xl font-bold text-yellow-500 mb-4 border-b border-gray-700 pb-2">
-                        <i class="fas fa-fire mr-2"></i>Tier Lists da Comunidade
-                    </h2>
-                    <div id="community-list" class="flex-1 overflow-y-auto space-y-4 max-h-[800px] pr-2">
-                        <p class="text-gray-500 text-center mt-10">Carregando listas...</p>
+            <!-- Coluna Direita: Banco de Imagens -->
+            <div class="w-full lg:w-80 flex-shrink-0">
+                <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 sticky top-24 h-[calc(100vh-120px)] flex flex-col">
+                    <div class="flex justify-between items-center mb-2 flex-shrink-0">
+                        <h3 class="text-lg font-bold text-gray-300">
+                            <i class="fas fa-images mr-1"></i> <span id="category-display">Imagens</span>
+                        </h3>
+                        <span id="loading-indicator" class="text-xs text-yellow-500 hidden"><i class="fas fa-sync fa-spin"></i> Carregando...</span>
+                    </div>
+                    
+                    <div id="image-bank" class="flex flex-wrap gap-2 p-2 bg-gray-900 rounded overflow-y-auto flex-grow content-start" ondrop="drop(event)" ondragover="allowDrop(event)">
+                        <!-- Imagens carregadas aqui -->
+                    </div>
+                    <div id="error-message" class="text-red-400 text-xs p-2 hidden flex-shrink-0"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TELA DE VISUALIZAÇÃO (VIEW) ================= -->
+        <!-- Substitui o antigo Modal -->
+        <div id="view-screen" class="hidden flex-col gap-6 animate-fade-in">
+            <!-- Header da Visualização -->
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-4 w-full md:w-auto">
+                    <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-bold transition">
+                        <i class="fas fa-arrow-left"></i> Voltar
+                    </button>
+                    <div>
+                        <h2 id="view-title" class="text-2xl font-bold text-yellow-500 leading-tight">Título da Lista</h2>
+                        <p class="text-sm text-gray-400">Criado por: <span id="view-creator" class="text-white font-bold">Nome</span></p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="view-edit-btn" onclick="editCurrentTierList()" class="hidden bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition">
+                        <i class="fas fa-pencil-alt"></i> Editar
+                    </button>
+                    <button onclick="downloadTierListImage()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-lg font-bold transition flex items-center gap-2 shadow-lg">
+                        <i class="fas fa-camera"></i> Baixar Imagem
+                    </button>
+                </div>
+            </div>
+
+            <!-- Área da Tier List (Static) -->
+            <div class="bg-gray-900 rounded-xl border border-gray-700 shadow-2xl overflow-hidden flex justify-center p-4 md:p-8">
+                 <div id="view-capture-area" class="w-full max-w-5xl bg-gray-900 p-4 rounded-lg">
+                    <div id="view-content" class="border border-gray-700 rounded overflow-hidden bg-black">
+                        <!-- Conteúdo gerado aqui -->
+                    </div>
+                    <div class="flex justify-between items-center mt-2 px-1 opacity-50">
+                        <div class="text-gray-500 text-xs">Tier List Maker Nin Online</div>
+                        <div class="text-yellow-600 text-xs font-bold">nin-online.com</div>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 
-    <!-- MODAL DE VISUALIZAÇÃO -->
-    <div id="view-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-gray-800 rounded-lg max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-600 flex flex-col shadow-2xl">
-            <!-- Header Modal -->
-            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
-                <div>
-                    <h2 id="modal-title" class="text-2xl font-bold text-yellow-500">Titulo</h2>
-                    <p class="text-sm text-gray-400">Criado por: <span id="modal-creator" class="text-white font-bold">Criador</span></p>
-                </div>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-2xl px-2"><i class="fas fa-times"></i></button>
+    <!-- MODAL DE SELEÇÃO DE CATEGORIA -->
+    <div id="category-modal" class="fixed inset-0 bg-black bg-opacity-90 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-xl max-w-lg w-full p-6 border border-gray-700 shadow-2xl transform transition-all scale-100">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-white">O que vamos classificar?</h3>
+                <button onclick="closeCategoryModal()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
             
-            <!-- Conteúdo (Tier List Estática) -->
-            <div class="overflow-y-auto flex-grow bg-gray-900 p-4" id="modal-scroll-area">
-                <div id="modal-capture-area" class="bg-gray-900 p-2">
-                    <!-- Área que será salva na imagem -->
-                    <div id="modal-content" class="border border-gray-700 rounded overflow-hidden"></div>
-                    <div class="text-right mt-2 text-gray-500 text-xs italic">Gerado em Nin Online Tier Maker</div>
-                </div>
-            </div>
-
-            <!-- Footer Modal -->
-            <div class="p-4 border-t border-gray-700 bg-gray-800 flex justify-end gap-3">
-                <button onclick="closeModal()" class="px-4 py-2 text-gray-300 hover:text-white transition">Fechar</button>
-                <button onclick="downloadTierListImage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded font-bold flex items-center gap-2 shadow-lg transition transform hover:scale-105">
-                    <i class="fas fa-camera"></i> Salvar Imagem
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="startEditor('ninjas')" class="bg-gray-700 hover:bg-yellow-600 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group">
+                    <i class="fas fa-user-ninja text-3xl text-yellow-500 group-hover:text-black"></i>
+                    <span class="font-bold">Ninjas</span>
+                </button>
+                <button onclick="startEditor('maestrias')" class="bg-gray-700 hover:bg-blue-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group">
+                    <i class="fas fa-scroll text-3xl text-blue-400 group-hover:text-white"></i>
+                    <span class="font-bold">Maestrias</span>
+                </button>
+                <button onclick="startEditor('jutsus')" class="bg-gray-700 hover:bg-red-600 hover:text-white p-4 rounded-lg transition flex flex-col items-center gap-2 group">
+                    <i class="fas fa-fire text-3xl text-red-500 group-hover:text-white"></i>
+                    <span class="font-bold">Jutsus</span>
+                </button>
+                <button onclick="startEditor('armas')" class="bg-gray-700 hover:bg-gray-200 hover:text-black p-4 rounded-lg transition flex flex-col items-center gap-2 group">
+                    <i class="fas fa-gavel text-3xl text-gray-400 group-hover:text-black"></i>
+                    <span class="font-bold">Armas</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Feedback -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold">
-        Salvo com sucesso!
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold pointer-events-none">
+        Ação realizada!
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // CONFIGURAÇÃO DO FIREBASE
+        // FIREBASE CONFIG
         const firebaseConfig = {
             apiKey: "AIzaSyDlO2KnSJR0RD3f2bn025qzAJa619lDY7M",
             authDomain: "tierlistninonline.firebaseapp.com",
@@ -247,36 +267,148 @@
             measurementId: "G-7JL99VSSH2"
         };
 
-        // --- CONFIGURAÇÃO GITHUB ---
+        // GITHUB CONFIG
         const GITHUB_USER = "aurioshlookin";
         const GITHUB_REPO = "tierlistninonline";
-        const PATHS_TO_TRY = [
-            "imagens/ninja",
-            "imagens/ninjas",  
-            "Imagens/Ninjas", 
-            "images/ninja", 
-            "ninjas",         
-            ""                
-        ];
+        const CATEGORY_PATHS = {
+            'ninjas': ['imagens/ninjas', 'imagens/ninja'],
+            'maestrias': ['imagens/maestrias', 'imagens/masteries'],
+            'jutsus': ['imagens/jutsus', 'imagens/jutsu'],
+            'armas': ['imagens/armas', 'imagens/weapons']
+        };
 
-        let BASE_IMAGE_URL = "";
-        window.communityData = {}; // Cache local para abrir o modal rápido
+        // Estado da Aplicação
+        let appState = {
+            currentUser: null,
+            currentCategory: 'ninjas',
+            currentDocId: null, 
+            imagesCache: {}, 
+            communityData: {} 
+        };
 
-        // Inicializa Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        let currentUser = null;
 
+        // AUTH
         signInAnonymously(auth).catch(console.error);
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                currentUser = user;
-                document.getElementById('auth-status').innerHTML = `<i class="fas fa-user-ninja text-green-400"></i> ID: ${user.uid.slice(0,6)}`;
+                appState.currentUser = user;
+                document.getElementById('auth-status').innerHTML = `ID: ${user.uid.slice(0,6)}`;
+                refreshCommunityGrid(); 
             }
         });
 
-        // --- GERENCIAMENTO DE TIERS ---
+        // --- NAVEGAÇÃO ENTRE TELAS ---
+
+        window.showHomeScreen = () => {
+            // Esconde todas
+            document.getElementById('editor-screen').classList.add('hidden');
+            document.getElementById('editor-screen').classList.remove('flex');
+            document.getElementById('view-screen').classList.add('hidden');
+            document.getElementById('view-screen').classList.remove('flex');
+            
+            // Mostra Home
+            document.getElementById('home-screen').classList.remove('hidden');
+            
+            // Scroll topo
+            window.scrollTo(0,0);
+            resetEditorState();
+        };
+
+        window.openTierView = (id) => {
+            window.currentModalId = id; // Mantemos a variavel global de ID
+            const data = appState.communityData[id];
+            if (!data) return;
+
+            // Preenche Header
+            document.getElementById('view-title').innerText = data.title;
+            document.getElementById('view-creator').innerText = data.creatorName;
+            
+            // Botão Editar (Só dono)
+            const editBtn = document.getElementById('view-edit-btn');
+            if (appState.currentUser && data.userId === appState.currentUser.uid) {
+                editBtn.classList.remove('hidden');
+            } else {
+                editBtn.classList.add('hidden');
+            }
+
+            // Renderiza Tier List
+            const container = document.getElementById('view-content');
+            container.innerHTML = '';
+
+            const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
+            const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${catPaths ? catPaths[0] : 'imagens/ninjas'}/`;
+
+            if (data.tiers) {
+                data.tiers.forEach(tier => {
+                    const row = document.createElement('div');
+                    row.className = 'flex border-b border-gray-700 bg-gray-900';
+                    let itemsHtml = '';
+                    if (tier.items) {
+                        itemsHtml = tier.items.map(name => `
+                            <div class="draggable-item static-item border-none shadow-none bg-transparent">
+                                <div class="ninja-image" style="background-image: url('${baseUrl}${name}.png')"></div>
+                                <div class="ninja-name">${name}</div>
+                            </div>
+                        `).join('');
+                    }
+                    
+                    row.innerHTML = `
+                        <div class="tier-label" style="background-color: ${tier.color};">${tier.label}</div>
+                        <div class="tier-content bg-[#111]">${itemsHtml}</div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            // Troca de Tela
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('editor-screen').classList.add('hidden');
+            document.getElementById('editor-screen').classList.remove('flex');
+            
+            const viewScreen = document.getElementById('view-screen');
+            viewScreen.classList.remove('hidden');
+            viewScreen.classList.add('flex');
+            window.scrollTo(0,0);
+        };
+
+        window.openCategoryModal = () => {
+            document.getElementById('category-modal').classList.remove('hidden');
+        };
+
+        window.closeCategoryModal = () => {
+            document.getElementById('category-modal').classList.add('hidden');
+        };
+
+        window.startEditor = async (category) => {
+            closeCategoryModal();
+            appState.currentCategory = category;
+            appState.currentDocId = null; 
+            
+            document.getElementById('home-screen').classList.add('hidden');
+            document.getElementById('view-screen').classList.add('hidden');
+            document.getElementById('view-screen').classList.remove('flex');
+            
+            const editor = document.getElementById('editor-screen');
+            editor.classList.remove('hidden');
+            editor.classList.add('flex');
+            
+            document.getElementById('category-display').innerText = category.charAt(0).toUpperCase() + category.slice(1);
+            
+            document.getElementById('tier-title').value = "";
+            // document.getElementById('creator-name').value = ""; // Opcional limpar
+            initBoard();
+            await loadImagesForCategory(category);
+        };
+
+        function resetEditorState() {
+            appState.currentDocId = null;
+        }
+
+        // --- EDITOR LOGIC ---
+
         const defaultTiers = [
             { label: 'S', color: '#ff7f7f' },
             { label: 'A', color: '#ffbf7f' },
@@ -285,7 +417,7 @@
             { label: 'D', color: '#bfff7f' }
         ];
 
-        window.addTierRow = (label = 'New', color = '#cccccc', contentIds = []) => {
+        window.addTierRow = (label = 'New', color = '#cccccc', contentItems = []) => {
             const board = document.getElementById('tier-board');
             const row = document.createElement('div');
             row.className = 'flex border-b border-gray-600 bg-gray-900 tier-row';
@@ -297,33 +429,142 @@
                 </div>
                 <div class="tier-content" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
                 <div class="tier-controls">
-                    <button onclick="moveRow(this, -1)" class="text-gray-400 hover:text-white text-xs" title="Subir"><i class="fas fa-chevron-up"></i></button>
-                    <div class="relative group">
-                        <i class="fas fa-palette text-gray-400 hover:text-white text-xs cursor-pointer"></i>
+                    <button onclick="moveRow(this, -1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-up"></i></button>
+                    <div class="relative group h-4 w-4">
+                        <i class="fas fa-palette text-gray-400 hover:text-white text-xs cursor-pointer absolute inset-0 text-center"></i>
                         <input type="color" value="${color}" 
                             class="absolute top-0 left-0 w-full h-full opacity-0 cursor-pointer"
                             oninput="this.parentElement.parentElement.parentElement.querySelector('.tier-label').style.backgroundColor = this.value">
                     </div>
-                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-400 text-xs" title="Excluir"><i class="fas fa-trash"></i></button>
-                    <button onclick="moveRow(this, 1)" class="text-gray-400 hover:text-white text-xs" title="Descer"><i class="fas fa-chevron-down"></i></button>
+                    <button onclick="deleteRow(this)" class="text-red-500 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                    <button onclick="moveRow(this, 1)" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-chevron-down"></i></button>
                 </div>
             `;
             board.appendChild(row);
 
-            if (contentIds.length > 0) {
+            if (contentItems && contentItems.length > 0) {
                 const contentDiv = row.querySelector('.tier-content');
-                contentIds.forEach(id => {
-                    // Tenta encontrar no banco primeiro
-                    const existingItem = document.querySelector(`.draggable-item[data-name="${id}"]`);
-                    if (existingItem) {
-                        contentDiv.appendChild(existingItem);
+                contentItems.forEach(itemName => {
+                    let itemEl = document.querySelector(`#image-bank .draggable-item[data-name="${itemName}"]`);
+                    if (!itemEl) {
+                         itemEl = createDraggableElement(itemName, getImageUrl(itemName));
+                    }
+                    if (itemEl) {
+                        contentDiv.appendChild(itemEl);
                     }
                 });
             }
         };
 
+        function initBoard() {
+            document.getElementById('tier-board').innerHTML = '';
+            defaultTiers.forEach(t => window.addTierRow(t.label, t.color));
+        }
+
+        // --- IMAGE LOADER ---
+
+        async function loadImagesForCategory(category) {
+            const bank = document.getElementById('image-bank');
+            bank.innerHTML = '';
+            
+            if (appState.imagesCache[category]) {
+                renderImagesToBank(appState.imagesCache[category]);
+                return;
+            }
+
+            const loader = document.getElementById('loading-indicator');
+            loader.classList.remove('hidden');
+            
+            const paths = CATEGORY_PATHS[category] || ['imagens/ninjas']; 
+            let found = false;
+
+            for (const path of paths) {
+                const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
+                try {
+                    const response = await fetch(apiUrl);
+                    if (response.ok) {
+                        const files = await response.json();
+                        const imageFiles = files.filter(f => f.name.match(/\.(png|jpg|jpeg|gif)$/i));
+                        
+                        if (imageFiles.length > 0) {
+                            appState.imagesCache[category] = imageFiles; 
+                            renderImagesToBank(imageFiles);
+                            found = true;
+                            break; 
+                        }
+                    }
+                } catch (e) {
+                    console.log(`Erro path ${path}`, e);
+                }
+            }
+
+            loader.classList.add('hidden');
+            if (!found) {
+                document.getElementById('error-message').innerText = "Nenhuma imagem encontrada.";
+                document.getElementById('error-message').classList.remove('hidden');
+            } else {
+                document.getElementById('error-message').classList.add('hidden');
+            }
+        }
+
+        function renderImagesToBank(files) {
+            const bank = document.getElementById('image-bank');
+            files.forEach((file, index) => {
+                const name = file.name.replace(/\.[^/.]+$/, "");
+                if (document.querySelector(`.draggable-item[data-name="${name}"]`)) return;
+                const el = createDraggableElement(name, file.download_url, index);
+                bank.appendChild(el);
+            });
+        }
+
+        function createDraggableElement(name, url, index = 0) {
+            const div = document.createElement('div');
+            div.className = 'draggable-item';
+            div.draggable = true;
+            div.id = `item-${name}-${index}-${Date.now()}`;
+            div.dataset.name = name;
+            div.dataset.url = url; 
+            
+            div.innerHTML = `
+                <div class="ninja-image" style="background-image: url('${url}')"></div>
+                <div class="ninja-name">${name}</div>
+            `;
+            
+            div.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData("text/plain", e.target.id);
+                e.target.style.opacity = '0.5';
+            });
+            div.addEventListener('dragend', (e) => e.target.style.opacity = '1');
+            return div;
+        }
+
+        function getImageUrl(name) {
+            if (appState.imagesCache[appState.currentCategory]) {
+                const file = appState.imagesCache[appState.currentCategory].find(f => f.name.startsWith(name));
+                if (file) return file.download_url;
+            }
+            const path = CATEGORY_PATHS[appState.currentCategory][0];
+            return `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${path}/${name}.png`;
+        }
+
+        // --- DRAG AND DROP & HELPERS ---
+        window.allowDrop = (ev) => ev.preventDefault();
+        window.drop = (ev) => {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text/plain");
+            const draggedElement = document.getElementById(data);
+            if (!draggedElement) return;
+
+            let target = ev.target;
+            if (target.closest('.draggable-item')) target = target.closest('.draggable-item').parentElement;
+            
+            if (target && (target.classList.contains('tier-content') || target.id === 'image-bank')) {
+                target.appendChild(draggedElement);
+            }
+        };
+        
         window.deleteRow = (btn) => {
-            if(confirm('Apagar Tier? Os itens voltarão para o banco.')) {
+            if(confirm('Apagar linha?')) {
                 const row = btn.closest('.tier-row');
                 const items = row.querySelectorAll('.draggable-item');
                 const bank = document.getElementById('image-bank');
@@ -331,172 +572,196 @@
                 row.remove();
             }
         };
-
-        window.moveRow = (btn, direction) => {
+        window.moveRow = (btn, dir) => {
             const row = btn.closest('.tier-row');
             const board = document.getElementById('tier-board');
-            if (direction === -1 && row.previousElementSibling) board.insertBefore(row, row.previousElementSibling);
-            else if (direction === 1 && row.nextElementSibling) board.insertBefore(row.nextElementSibling, row);
+            if (dir === -1 && row.previousElementSibling) board.insertBefore(row, row.previousElementSibling);
+            else if (dir === 1 && row.nextElementSibling) board.insertBefore(row.nextElementSibling, row);
         };
 
-        function initBoard() {
-            const board = document.getElementById('tier-board');
-            board.innerHTML = '';
-            defaultTiers.forEach(t => window.addTierRow(t.label, t.color));
-        }
+        // --- SALVAR E EDITAR ---
 
-        // --- GITHUB IMAGES ---
-        async function loadNinjasFromGitHub(pathIndex = 0) {
-            const bank = document.getElementById('image-bank');
-            const loader = document.getElementById('loading-indicator');
-            const errorMsg = document.getElementById('error-message');
-            
-            if (pathIndex === 0) {
-                loader.classList.remove('hidden');
-                errorMsg.classList.add('hidden');
-            }
-
-            if (pathIndex >= PATHS_TO_TRY.length) {
-                loader.classList.add('hidden');
-                errorMsg.innerHTML = `Erro: Imagens não encontradas.`;
-                errorMsg.classList.remove('hidden');
-                return;
-            }
-
-            const path = PATHS_TO_TRY[pathIndex];
-            const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${path}`;
-
-            try {
-                const response = await fetch(apiUrl);
-                if (response.status === 404) {
-                    await loadNinjasFromGitHub(pathIndex + 1);
-                    return;
-                }
-                
-                const files = await response.json();
-                const imageFiles = files.filter(file => file.name.match(/\.(png|jpg|jpeg|gif)$/i));
-
-                if (imageFiles.length === 0) {
-                    await loadNinjasFromGitHub(pathIndex + 1);
-                    return;
-                }
-
-                // Sucesso
-                const pathPart = path ? `${path}/` : "";
-                BASE_IMAGE_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${pathPart}`;
-
-                imageFiles.forEach((file, index) => {
-                    const ninjaName = file.name.replace(/\.[^/.]+$/, "");
-                    
-                    if(document.querySelector(`.draggable-item[data-name="${ninjaName}"]`)) return;
-
-                    const div = document.createElement('div');
-                    div.className = 'draggable-item'; 
-                    
-                    div.innerHTML = `
-                        <div class="ninja-image" style="background-image: url('${file.download_url}')"></div>
-                        <div class="ninja-name">${ninjaName}</div>
-                    `;
-
-                    div.draggable = true;
-                    div.id = `ninja-${index}-${Date.now()}`; 
-                    div.dataset.name = ninjaName; 
-
-                    div.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.setData("text/plain", e.target.id);
-                        e.target.style.opacity = '0.5';
-                    });
-                    div.addEventListener('dragend', (e) => e.target.style.opacity = '1');
-
-                    bank.appendChild(div);
-                });
-                
-                loader.classList.add('hidden');
-
-            } catch (error) {
-                console.error(`Erro ao ler ${path}:`, error);
-                await loadNinjasFromGitHub(pathIndex + 1);
-            }
-        }
-
-        // --- DRAG AND DROP ---
-        window.allowDrop = (ev) => ev.preventDefault();
-        window.drop = (ev) => {
-            ev.preventDefault();
-            const data = ev.dataTransfer.getData("text/plain");
-            const draggedElement = document.getElementById(data);
-            if(!draggedElement) return;
-
-            let target = ev.target;
-            if (target.closest('.draggable-item')) {
-                target = target.closest('.draggable-item').parentElement;
-            }
-
-            if (target && (target.classList.contains('tier-content') || target.id === 'image-bank')) {
-                target.appendChild(draggedElement);
-            }
-        };
-
-        // --- SALVAR ---
         window.saveTierList = async () => {
-            if (!currentUser) {
-                alert("Conectando ao servidor...");
-                return;
-            }
-
+            if (!appState.currentUser) { alert("Conectando..."); return; }
             const title = document.getElementById('tier-title').value.trim();
             const creator = document.getElementById('creator-name').value.trim();
 
-            if (!title) {
-                alert("Por favor, preencha o Nome da Tier List.");
-                document.getElementById('tier-title').focus();
-                return;
-            }
-            if (!creator) {
-                alert("Por favor, preencha o Seu Nick.");
-                document.getElementById('creator-name').focus();
-                return;
-            }
-            
-            const rows = document.querySelectorAll('.tier-row');
-            const tiersData = []; 
+            if (!title || !creator) { alert("Preencha Título e Nick."); return; }
 
+            const rows = document.querySelectorAll('.tier-row');
+            const tiersData = [];
             rows.forEach(row => {
-                const labelDiv = row.querySelector('.tier-label');
-                const contentDiv = row.querySelector('.tier-content');
+                const label = row.querySelector('.tier-label');
+                const content = row.querySelector('.tier-content');
                 const items = [];
-                contentDiv.querySelectorAll('.draggable-item').forEach(item => items.push(item.dataset.name));
-                
+                content.querySelectorAll('.draggable-item').forEach(i => items.push(i.dataset.name));
                 tiersData.push({
-                    label: labelDiv.innerText.trim(),
-                    color: labelDiv.style.backgroundColor,
+                    label: label.innerText.trim(),
+                    color: label.style.backgroundColor,
                     items: items
                 });
             });
 
-            try {
-                await addDoc(collection(db, "tierlists"), {
-                    title: title,
-                    creatorName: creator, 
-                    tiers: tiersData, 
-                    userId: currentUser.uid,
-                    votes: 0,
-                    voterIds: [], 
-                    createdAt: serverTimestamp(),
-                    version: 2 
-                });
-                
-                showToast("Salvo com sucesso!");
-                document.getElementById('tier-title').value = "";
-                
-                const bank = document.getElementById('image-bank');
-                document.querySelectorAll('.draggable-item').forEach(item => bank.appendChild(item));
-                initBoard();
+            const payload = {
+                title: title,
+                creatorName: creator,
+                tiers: tiersData,
+                category: appState.currentCategory,
+                userId: appState.currentUser.uid,
+                updatedAt: serverTimestamp(),
+                version: 3
+            };
 
+            try {
+                let docId;
+                if (appState.currentDocId) {
+                    const docRef = doc(db, "tierlists", appState.currentDocId);
+                    await updateDoc(docRef, payload);
+                    docId = appState.currentDocId;
+                    showToast("Salvo!");
+                } else {
+                    payload.createdAt = serverTimestamp();
+                    payload.votes = 0;
+                    payload.voterIds = [];
+                    const docRef = await addDoc(collection(db, "tierlists"), payload);
+                    docId = docRef.id;
+                    showToast("Criado!");
+                }
+
+                // Atualiza cache e vai para tela de visualização
+                appState.communityData[docId] = { ...payload, id: docId, votes: payload.votes || 0 };
+                window.openTierView(docId);
+                
             } catch (e) {
-                console.error("Erro: ", e);
-                alert("Erro ao salvar: " + e.message);
+                console.error(e);
+                alert("Erro: " + e.message);
             }
+        };
+
+        window.editCurrentTierList = async () => {
+            const id = window.currentModalId;
+            const data = appState.communityData[id];
+            
+            if (!data) return;
+            
+            // Abre Editor
+            await startEditor(data.category || 'ninjas');
+            
+            appState.currentDocId = id;
+            document.getElementById('tier-title').value = data.title;
+            document.getElementById('creator-name').value = data.creatorName;
+            
+            const board = document.getElementById('tier-board');
+            board.innerHTML = '';
+            
+            if (Array.isArray(data.tiers)) {
+                data.tiers.forEach(t => {
+                    addTierRow(t.label, t.color, t.items);
+                });
+            }
+            showToast("Editando...");
+        };
+
+        // --- GRID E VOTOS ---
+
+        const q = query(collection(db, "tierlists"), orderBy("votes", "desc"));
+        onSnapshot(q, (snapshot) => {
+            const grid = document.getElementById('community-grid');
+            grid.innerHTML = '';
+            
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data();
+                const id = docSnap.id;
+                appState.communityData[id] = data; 
+                
+                const card = document.createElement('div');
+                card.className = "bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition cursor-pointer flex flex-col group relative";
+                // Agora abre a Tela de Visualização (Screen) em vez do Modal
+                card.onclick = () => window.openTierView(id);
+                
+                let topItems = [];
+                if (data.tiers && Array.isArray(data.tiers)) {
+                    const first = data.tiers.find(t => t.items && t.items.length > 0);
+                    if (first) topItems = first.items.slice(0, 4);
+                }
+
+                const catPaths = CATEGORY_PATHS[data.category || 'ninjas'];
+                const basePath = catPaths ? catPaths[0] : 'imagens/ninjas';
+                const baseUrl = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/${basePath}/`;
+
+                let previewHtml = `<div class="bg-black h-24 flex items-center justify-center gap-1 p-2">`;
+                if (topItems.length > 0) {
+                    topItems.forEach(item => {
+                        previewHtml += `<div class="w-12 h-12 bg-cover bg-center rounded border border-gray-600" style="background-image: url('${baseUrl}${item}.png')"></div>`;
+                    });
+                } else {
+                    previewHtml += `<span class="text-gray-600 text-xs">Vazio</span>`;
+                }
+                previewHtml += `</div>`;
+
+                let editBtn = '';
+                if (appState.currentUser && data.userId === appState.currentUser.uid) {
+                    editBtn = `
+                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="absolute top-2 right-2 bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full z-20 text-xs shadow-md" title="Editar">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
+                    `;
+                }
+
+                const isVoted = data.voterIds && appState.currentUser && data.voterIds.includes(appState.currentUser.uid);
+                const voteClass = isVoted ? "text-green-500" : "text-gray-400 hover:text-yellow-500";
+                
+                // Formata o ID do criador para ser discreto
+                const creatorId = data.userId ? `#${data.userId.slice(0, 4)}` : '';
+
+                card.innerHTML = `
+                    ${editBtn}
+                    ${previewHtml}
+                    <div class="p-3 flex flex-col flex-grow">
+                        <h4 class="font-bold text-white text-md truncate group-hover:text-yellow-400">${data.title}</h4>
+                        <div class="flex justify-between items-center mt-auto pt-2">
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-400 truncate max-w-[120px] font-bold">${data.creatorName}</span>
+                                <span class="text-[10px] text-gray-600 font-mono">${creatorId}</span>
+                            </div>
+                            <div class="flex items-center gap-1 bg-gray-900 px-2 py-1 rounded border border-gray-700 hover:border-gray-500 transition" onclick="event.stopPropagation(); vote('${id}')">
+                                <i class="fas fa-caret-up ${voteClass}"></i>
+                                <span class="text-sm font-mono font-bold">${data.votes || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            
+            if (grid.innerHTML === '') grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Nenhuma Tier List encontrada. Seja o primeiro!</div>';
+        });
+
+        window.vote = async (docId) => {
+            if (!appState.currentUser) return;
+            const docRef = doc(db, "tierlists", docId);
+            try {
+                await updateDoc(docRef, { 
+                    votes: increment(1),
+                    voterIds: arrayUnion(appState.currentUser.uid)
+                });
+            } catch (e) { 
+                console.error("Voto falhou", e);
+            }
+        };
+
+        window.downloadTierListImage = () => {
+            const area = document.getElementById('view-capture-area');
+            html2canvas(area, {
+                useCORS: true,
+                backgroundColor: "#111",
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `NinTier-${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            });
         };
 
         function showToast(msg) {
@@ -505,200 +770,8 @@
             t.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
-
-        // --- VISUALIZAÇÃO E MODAL ---
         
-        window.openTierModal = (id) => {
-            const data = window.communityData[id];
-            if (!data) return;
-
-            document.getElementById('modal-title').innerText = data.title;
-            document.getElementById('modal-creator').innerText = data.creatorName || "Desconhecido";
-            
-            const container = document.getElementById('modal-content');
-            container.innerHTML = ""; // Limpa anterior
-
-            // Normaliza estrutura de dados (v1 ou v2)
-            let tiersToRender = [];
-            if (Array.isArray(data.tiers)) {
-                tiersToRender = data.tiers;
-            } else if (data.tiers) {
-                // Converte formato antigo {S:[], A:[]} para novo
-                Object.keys(data.tiers).forEach(key => {
-                    tiersToRender.push({
-                        label: key,
-                        color: getKeyColor(key), // Tenta adivinhar cor
-                        items: data.tiers[key]
-                    });
-                });
-            }
-
-            const baseUrl = BASE_IMAGE_URL || `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/imagens/ninja/`;
-
-            tiersToRender.forEach(tier => {
-                const row = document.createElement('div');
-                row.className = 'flex border-b border-gray-600 bg-gray-900';
-                
-                // Cria HTML da linha estática
-                let itemsHtml = "";
-                if (tier.items && tier.items.length > 0) {
-                    itemsHtml = tier.items.map(itemName => `
-                        <div class="draggable-item static-item">
-                            <div class="ninja-image" style="background-image: url('${baseUrl}${itemName}.png')"></div>
-                            <div class="ninja-name">${itemName}</div>
-                        </div>
-                    `).join('');
-                }
-
-                row.innerHTML = `
-                    <div class="tier-label" style="background-color: ${tier.color || '#555'};">
-                        ${tier.label}
-                    </div>
-                    <div class="tier-content">
-                        ${itemsHtml}
-                    </div>
-                `;
-                container.appendChild(row);
-            });
-
-            document.getElementById('view-modal').classList.remove('hidden');
-        };
-
-        window.closeModal = () => {
-            document.getElementById('view-modal').classList.add('hidden');
-        };
-
-        window.downloadTierListImage = () => {
-            const captureArea = document.getElementById('modal-capture-area');
-            const btn = document.querySelector('#view-modal button i.fa-camera').parentElement;
-            
-            // Feedback visual
-            const oldText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando...';
-            
-            html2canvas(captureArea, {
-                useCORS: true, // Importante para imagens do GitHub
-                backgroundColor: "#111827",
-                scale: 2 // Melhor qualidade
-            }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = `tierlist-${Date.now()}.png`;
-                link.href = canvas.toDataURL();
-                link.click();
-                
-                btn.innerHTML = oldText;
-            }).catch(err => {
-                console.error("Erro ao gerar imagem:", err);
-                alert("Erro ao gerar imagem. Verifique o console.");
-                btn.innerHTML = oldText;
-            });
-        };
-
-        function getKeyColor(key) {
-             const map = { 'S': '#ff7f7f', 'A': '#ffbf7f', 'B': '#ffdf7f', 'C': '#ffff7f', 'D': '#bfff7f' };
-             return map[key] || '#555';
-        }
-
-        // --- FEED COMUNIDADE ---
-        const q = query(collection(db, "tierlists"), orderBy("votes", "desc")); 
-        
-        onSnapshot(q, (snapshot) => {
-            const listContainer = document.getElementById('community-list');
-            listContainer.innerHTML = "";
-            window.communityData = {}; // Reseta cache
-
-            snapshot.forEach((docSnap) => {
-                const data = docSnap.data();
-                const id = docSnap.id;
-                
-                // Salva no cache
-                window.communityData[id] = data;
-
-                const card = document.createElement('div');
-                card.className = "bg-gray-700 p-3 rounded border border-gray-600 hover:border-yellow-500 transition cursor-pointer group";
-                card.onclick = (e) => window.openTierModal(id); // Abre modal ao clicar
-                
-                let topTierItems = [];
-                if (Array.isArray(data.tiers)) {
-                    const firstNonEmpty = data.tiers.find(t => t.items && t.items.length > 0);
-                    if (firstNonEmpty) topTierItems = firstNonEmpty.items;
-                } else if (data.tiers && data.tiers.S) {
-                    topTierItems = data.tiers.S;
-                }
-
-                let sPreview = "";
-                if(topTierItems.length > 0) {
-                     const top3 = topTierItems.slice(0, 3);
-                     const baseUrl = BASE_IMAGE_URL || `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/main/imagens/ninja/`;
-                     
-                     sPreview = `<div class="flex gap-1 mb-2 mt-1 pointer-events-none">
-                        ${top3.map(name => `<div class="w-8 h-8 rounded bg-cover border border-gray-800 bg-center" style="background-image: url('${baseUrl}${name}.png')"></div>`).join('')}
-                        ${topTierItems.length > 3 ? '<span class="text-xs text-gray-400 self-end">...</span>' : ''}
-                     </div>`;
-                } else {
-                    sPreview = `<div class="text-xs text-gray-500 italic mb-2 pointer-events-none">Vazio</div>`;
-                }
-
-                const alreadyVoted = data.voterIds && currentUser && data.voterIds.includes(currentUser.uid);
-                const voteColor = alreadyVoted ? "text-green-500" : "text-gray-400 hover:text-yellow-500";
-
-                card.innerHTML = `
-                    <div class="flex justify-between items-start pointer-events-none"> <!-- pointer-events-none para o click ir pro card pai -->
-                        <div>
-                            <h4 class="font-bold text-white text-lg leading-tight mb-1 group-hover:text-yellow-400">${data.title}</h4>
-                            <p class="text-xs text-gray-400">Criado por: <span class="text-yellow-500 font-bold">${data.creatorName || 'Anônimo'}</span></p>
-                        </div>
-                    </div>
-                    ${sPreview}
-                    <div class="flex justify-between items-center mt-2 border-t border-gray-600 pt-2">
-                         <span class="text-xs text-blue-400 group-hover:underline"><i class="fas fa-eye"></i> Visualizar</span>
-                         
-                         <!-- Botão de voto separado com stopPropagation -->
-                         <div class="flex items-center gap-1 z-10" onclick="event.stopPropagation(); vote('${id}')">
-                            <button class="${voteColor} transition p-1 hover:scale-125" ${alreadyVoted ? 'disabled' : ''}>
-                                <i class="fas fa-caret-up text-2xl"></i>
-                            </button>
-                            <span class="font-mono font-bold text-sm text-white">${data.votes || 0}</span>
-                         </div>
-                    </div>
-                `;
-                listContainer.appendChild(card);
-            });
-        });
-
-        window.vote = async (docId) => {
-            if (!currentUser) {
-                alert("Aguarde conectar...");
-                return;
-            }
-
-            const docRef = doc(db, "tierlists", docId);
-            
-            try {
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    if (data.voterIds && data.voterIds.includes(currentUser.uid)) {
-                        alert("Você já votou nesta lista!");
-                        return;
-                    }
-                }
-
-                await updateDoc(docRef, { 
-                    votes: increment(1),
-                    voterIds: arrayUnion(currentUser.uid)
-                });
-            } catch (e) {
-                console.error("Erro ao votar:", e);
-                if (e.code === 'permission-denied') {
-                     alert("Erro: Você já votou ou não tem permissão.");
-                }
-            }
-        };
-
-        // INICIALIZAÇÃO
-        initBoard();
-        loadNinjasFromGitHub();
+        window.refreshCommunityGrid = () => { /* Triggered by auth change */ };
 
     </script>
 </body>
