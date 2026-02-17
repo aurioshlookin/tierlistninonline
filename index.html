@@ -659,7 +659,8 @@
                 await Promise.all([
                     setDoc(winnerRef, winnerUpdate, { merge: true }),
                     setDoc(loserRef, loserUpdate, { merge: true }),
-                    setDoc(metaRef, { [`months_${category}`]: arrayUnion(currentMonth) }, { merge: true })
+                    // Tenta atualizar meta, mas se falhar (por regras) o jogo continua
+                    setDoc(metaRef, { [`months_${category}`]: arrayUnion(currentMonth) }, { merge: true }).catch(err => console.log("Meta update skipped", err))
                 ]);
 
                 // Atualiza Cache SE estivermos vendo o mês atual
