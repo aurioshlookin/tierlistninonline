@@ -411,13 +411,22 @@
             const editBtn = document.getElementById('view-edit-btn');
             const deleteBtn = document.getElementById('view-delete-btn');
             
-            // Lógica de Permissão: É o dono (mesmo anônimo) OU é o Admin
+            // Lógica de Permissão
             const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
-            const canEdit = isOwner || appState.isAdmin;
-            const canDelete = isOwner || appState.isAdmin;
             
-            if (canEdit) editBtn.classList.remove('hidden'); else editBtn.classList.add('hidden');
-            if (canDelete) deleteBtn.classList.remove('hidden'); else deleteBtn.classList.add('hidden');
+            // Editar: Dono ou Admin
+            if (isOwner || appState.isAdmin) {
+                editBtn.classList.remove('hidden');
+            } else {
+                editBtn.classList.add('hidden');
+            }
+            
+            // Excluir: APENAS Admin
+            if (appState.isAdmin) {
+                deleteBtn.classList.remove('hidden');
+            } else {
+                deleteBtn.classList.add('hidden');
+            }
 
             // Renderiza Tier List
             const container = document.getElementById('view-content');
@@ -795,19 +804,28 @@
                 previewHtml += `</div>`;
 
                 let actionBtns = '';
-                // Se for Admin (appState.isAdmin) OU o Dono, mostra os botões
                 const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
-                if (appState.isAdmin || isOwner) {
-                    actionBtns = `
-                        <div class="absolute top-2 right-2 flex gap-1 z-20">
-                            <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Editar">
-                                <i class="fas fa-pencil-alt"></i>
-                            </button>
-                            <button onclick="event.stopPropagation(); window.currentModalId='${id}'; deleteCurrentTierList()" class="bg-black bg-opacity-70 text-red-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Excluir">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+                
+                let btnsHtml = '';
+                
+                // Editar: Dono ou Admin
+                if (isOwner || appState.isAdmin) {
+                    btnsHtml += `
+                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Editar">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>`;
+                }
+                
+                // Excluir: APENAS Admin
+                if (appState.isAdmin) {
+                    btnsHtml += `
+                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; deleteCurrentTierList()" class="bg-black bg-opacity-70 text-red-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Excluir">
+                            <i class="fas fa-trash"></i>
+                        </button>`;
+                }
+
+                if (btnsHtml) {
+                    actionBtns = `<div class="absolute top-2 right-2 flex gap-1 z-20">${btnsHtml}</div>`;
                 }
 
                 const isVoted = data.voterIds && appState.currentUser && data.voterIds.includes(appState.currentUser.uid);
