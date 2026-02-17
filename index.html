@@ -81,25 +81,34 @@
 
     <!-- Navbar -->
     <nav class="bg-black border-b border-gray-800 p-4 sticky top-0 z-40 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
-            <div class="flex items-center gap-4">
-                <h1 class="text-2xl font-bold text-yellow-500 cursor-pointer flex items-center gap-2" onclick="showHomeScreen()">
-                    <i class="fas fa-scroll"></i> <span class="hidden md:inline">Nin Maker</span>
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4 md:gap-0">
+            <div class="flex items-center gap-4 w-full md:w-auto justify-between md:justify-start">
+                <h1 class="text-xl md:text-2xl font-bold text-yellow-500 cursor-pointer flex items-center gap-2 truncate" onclick="showHomeScreen()">
+                    <i class="fas fa-scroll"></i> <span class="hidden sm:inline">Nin Online - Tier List Maker</span> <span class="sm:hidden">Nin Tier Maker</span>
                 </h1>
                 
-                <!-- BOTÃO INÍCIO MELHORADO -->
-                <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-sm">
-                    <i class="fas fa-home"></i> Início
+                <button onclick="showHomeScreen()" class="bg-gray-700 hover:bg-gray-600 border border-gray-600 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-sm ml-4">
+                    <i class="fas fa-home"></i> <span class="hidden sm:inline">Início</span>
                 </button>
             </div>
             
-            <div class="flex items-center gap-4">
-                <button onclick="openCategoryModal()" class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-lg shadow-yellow-900/20">
-                    <i class="fas fa-plus"></i> Criar Nova
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <!-- Botão Login Admin -->
+                <button id="login-btn" onclick="openLoginModal()" class="text-gray-400 hover:text-white px-3 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm">
+                    <i class="fas fa-lock"></i> Admin
                 </button>
-                <div id="auth-status" class="text-xs text-gray-500 font-mono border-l border-gray-700 pl-4">
-                    <i class="fas fa-spinner fa-spin"></i>
+                
+                <!-- Info Admin (Logado) -->
+                <div id="admin-info" class="hidden flex items-center gap-2 bg-red-900 bg-opacity-30 px-3 py-1.5 rounded-lg border border-red-700">
+                    <span class="text-xs font-bold text-red-300"><i class="fas fa-user-shield"></i> MODO ADMIN</span>
+                    <button onclick="logout()" class="text-gray-400 hover:text-white text-xs ml-2" title="Sair"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
+
+                <div class="h-6 w-px bg-gray-700 mx-1"></div>
+
+                <button onclick="openCategoryModal()" class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-1.5 rounded-lg font-bold transition flex items-center gap-2 text-sm shadow-lg shadow-yellow-900/20">
+                    <i class="fas fa-plus"></i> <span class="hidden sm:inline">Criar Nova</span><span class="sm:hidden">Criar</span>
+                </button>
             </div>
         </div>
     </nav>
@@ -177,7 +186,6 @@
         </div>
 
         <!-- ================= TELA DE VISUALIZAÇÃO (VIEW) ================= -->
-        <!-- Substitui o antigo Modal -->
         <div id="view-screen" class="hidden flex-col gap-6 animate-fade-in">
             <!-- Header da Visualização -->
             <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
@@ -192,6 +200,9 @@
                 </div>
 
                 <div class="flex gap-3">
+                    <button id="view-delete-btn" onclick="deleteCurrentTierList()" class="hidden bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold transition">
+                        <i class="fas fa-trash"></i> Excluir
+                    </button>
                     <button id="view-edit-btn" onclick="editCurrentTierList()" class="hidden bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg font-bold transition">
                         <i class="fas fa-pencil-alt"></i> Editar
                     </button>
@@ -208,8 +219,8 @@
                         <!-- Conteúdo gerado aqui -->
                     </div>
                     <div class="flex justify-between items-center mt-2 px-1 opacity-50">
-                        <div class="text-gray-500 text-xs">Tier List Maker Nin Online</div>
-                        <div class="text-yellow-600 text-xs font-bold">nin-online.com</div>
+                        <div class="text-gray-500 text-xs">Nin Online - Tier List Maker</div>
+                        <div class="text-yellow-600 text-[10px] font-bold">https://aurioshlookin.github.io/tierlistninonline/</div>
                     </div>
                 </div>
             </div>
@@ -246,6 +257,27 @@
         </div>
     </div>
 
+    <!-- MODAL DE LOGIN ADMIN -->
+    <div id="login-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-gray-800 rounded-xl max-w-sm w-full p-6 border border-gray-700 shadow-2xl">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-user-shield text-red-500"></i> Login Admin
+            </h3>
+            
+            <div class="space-y-3">
+                <input type="email" id="admin-email" placeholder="Email do Admin" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
+                <input type="password" id="admin-password" placeholder="Senha" class="w-full bg-gray-900 border border-gray-600 rounded p-3 text-white focus:border-yellow-500 outline-none">
+            </div>
+
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-white px-4">Cancelar</button>
+                <button onclick="performAdminLogin()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold">
+                    Entrar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-6 py-3 rounded shadow-lg transform translate-y-20 transition opacity-0 z-50 font-bold pointer-events-none">
         Ação realizada!
@@ -253,8 +285,8 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, updateDoc, doc, increment, serverTimestamp, arrayUnion, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         // FIREBASE CONFIG
         const firebaseConfig = {
@@ -280,6 +312,7 @@
         // Estado da Aplicação
         let appState = {
             currentUser: null,
+            isAdmin: false, // Flag para saber se é você
             currentCategory: 'ninjas',
             currentDocId: null, 
             imagesCache: {}, 
@@ -291,34 +324,82 @@
         const db = getFirestore(app);
 
         // AUTH
-        signInAnonymously(auth).catch(console.error);
+        // Tenta logar anônimo se não houver usuário. 
+        // Se o admin deslogar, ele volta a ser anônimo.
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 appState.currentUser = user;
-                document.getElementById('auth-status').innerHTML = `ID: ${user.uid.slice(0,6)}`;
+                // Se NÃO for anônimo, consideramos que é o admin (pois só você tem senha)
+                appState.isAdmin = !user.isAnonymous;
+                
+                updateAuthUI(user);
                 refreshCommunityGrid(); 
+            } else {
+                // Se não tem user nenhum, loga anônimo automaticamente
+                signInAnonymously(auth).catch(console.error);
             }
         });
+
+        function updateAuthUI(user) {
+            const loginBtn = document.getElementById('login-btn');
+            const adminInfo = document.getElementById('admin-info');
+
+            if (appState.isAdmin) {
+                // Modo Admin
+                loginBtn.classList.add('hidden');
+                adminInfo.classList.remove('hidden');
+                adminInfo.classList.add('flex');
+            } else {
+                // Modo Visitante (Anônimo)
+                loginBtn.classList.remove('hidden');
+                adminInfo.classList.add('hidden');
+                adminInfo.classList.remove('flex');
+            }
+        }
+
+        // --- SISTEMA DE LOGIN ADMIN ---
+        window.openLoginModal = () => document.getElementById('login-modal').classList.remove('hidden');
+        window.closeLoginModal = () => document.getElementById('login-modal').classList.add('hidden');
+
+        window.performAdminLogin = () => {
+            const email = document.getElementById('admin-email').value;
+            const pass = document.getElementById('admin-password').value;
+            
+            if(!email || !pass) return alert("Preencha email e senha");
+
+            signInWithEmailAndPassword(auth, email, pass)
+                .then((userCredential) => {
+                    closeLoginModal();
+                    showToast("Admin Logado com Sucesso!");
+                    // O onAuthStateChanged vai lidar com o resto
+                })
+                .catch((error) => {
+                    console.error(error);
+                    alert("Erro ao entrar: " + error.message);
+                });
+        };
+
+        window.logout = () => {
+            signOut(auth).then(() => {
+                showToast("Admin desconectado.");
+                // O onAuthStateChanged vai disparar e logar anônimo novamente
+            });
+        };
 
         // --- NAVEGAÇÃO ENTRE TELAS ---
 
         window.showHomeScreen = () => {
-            // Esconde todas
             document.getElementById('editor-screen').classList.add('hidden');
             document.getElementById('editor-screen').classList.remove('flex');
             document.getElementById('view-screen').classList.add('hidden');
             document.getElementById('view-screen').classList.remove('flex');
-            
-            // Mostra Home
             document.getElementById('home-screen').classList.remove('hidden');
-            
-            // Scroll topo
             window.scrollTo(0,0);
             resetEditorState();
         };
 
         window.openTierView = (id) => {
-            window.currentModalId = id; // Mantemos a variavel global de ID
+            window.currentModalId = id; 
             const data = appState.communityData[id];
             if (!data) return;
 
@@ -326,13 +407,17 @@
             document.getElementById('view-title').innerText = data.title;
             document.getElementById('view-creator').innerText = data.creatorName;
             
-            // Botão Editar (Só dono)
+            // Botões de Ação
             const editBtn = document.getElementById('view-edit-btn');
-            if (appState.currentUser && data.userId === appState.currentUser.uid) {
-                editBtn.classList.remove('hidden');
-            } else {
-                editBtn.classList.add('hidden');
-            }
+            const deleteBtn = document.getElementById('view-delete-btn');
+            
+            // Lógica de Permissão: É o dono (mesmo anônimo) OU é o Admin
+            const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
+            const canEdit = isOwner || appState.isAdmin;
+            const canDelete = isOwner || appState.isAdmin;
+            
+            if (canEdit) editBtn.classList.remove('hidden'); else editBtn.classList.add('hidden');
+            if (canDelete) deleteBtn.classList.remove('hidden'); else deleteBtn.classList.add('hidden');
 
             // Renderiza Tier List
             const container = document.getElementById('view-content');
@@ -398,7 +483,6 @@
             document.getElementById('category-display').innerText = category.charAt(0).toUpperCase() + category.slice(1);
             
             document.getElementById('tier-title').value = "";
-            // document.getElementById('creator-name').value = ""; // Opcional limpar
             initBoard();
             await loadImagesForCategory(category);
         };
@@ -579,7 +663,7 @@
             else if (dir === 1 && row.nextElementSibling) board.insertBefore(row.nextElementSibling, row);
         };
 
-        // --- SALVAR E EDITAR ---
+        // --- SALVAR, EDITAR E EXCLUIR ---
 
         window.saveTierList = async () => {
             if (!appState.currentUser) { alert("Conectando..."); return; }
@@ -628,7 +712,6 @@
                     showToast("Criado!");
                 }
 
-                // Atualiza cache e vai para tela de visualização
                 appState.communityData[docId] = { ...payload, id: docId, votes: payload.votes || 0 };
                 window.openTierView(docId);
                 
@@ -644,7 +727,6 @@
             
             if (!data) return;
             
-            // Abre Editor
             await startEditor(data.category || 'ninjas');
             
             appState.currentDocId = id;
@@ -662,6 +744,20 @@
             showToast("Editando...");
         };
 
+        window.deleteCurrentTierList = async () => {
+            const id = window.currentModalId;
+            if(!confirm("Tem certeza que deseja EXCLUIR esta Tier List?")) return;
+
+            try {
+                await deleteDoc(doc(db, "tierlists", id));
+                showToast("Tier List Excluída.");
+                showHomeScreen();
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao excluir: " + e.message);
+            }
+        };
+
         // --- GRID E VOTOS ---
 
         const q = query(collection(db, "tierlists"), orderBy("votes", "desc"));
@@ -676,7 +772,6 @@
                 
                 const card = document.createElement('div');
                 card.className = "bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-yellow-500 transition cursor-pointer flex flex-col group relative";
-                // Agora abre a Tela de Visualização (Screen) em vez do Modal
                 card.onclick = () => window.openTierView(id);
                 
                 let topItems = [];
@@ -699,23 +794,29 @@
                 }
                 previewHtml += `</div>`;
 
-                let editBtn = '';
-                if (appState.currentUser && data.userId === appState.currentUser.uid) {
-                    editBtn = `
-                        <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="absolute top-2 right-2 bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full z-20 text-xs shadow-md" title="Editar">
-                            <i class="fas fa-pencil-alt"></i>
-                        </button>
+                let actionBtns = '';
+                // Se for Admin (appState.isAdmin) OU o Dono, mostra os botões
+                const isOwner = appState.currentUser && data.userId === appState.currentUser.uid;
+                if (appState.isAdmin || isOwner) {
+                    actionBtns = `
+                        <div class="absolute top-2 right-2 flex gap-1 z-20">
+                            <button onclick="event.stopPropagation(); window.currentModalId='${id}'; editCurrentTierList()" class="bg-black bg-opacity-70 text-yellow-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Editar">
+                                <i class="fas fa-pencil-alt"></i>
+                            </button>
+                            <button onclick="event.stopPropagation(); window.currentModalId='${id}'; deleteCurrentTierList()" class="bg-black bg-opacity-70 text-red-500 hover:text-white p-1.5 rounded-full text-xs shadow-md" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     `;
                 }
 
                 const isVoted = data.voterIds && appState.currentUser && data.voterIds.includes(appState.currentUser.uid);
                 const voteClass = isVoted ? "text-green-500" : "text-gray-400 hover:text-yellow-500";
                 
-                // Formata o ID do criador para ser discreto
                 const creatorId = data.userId ? `#${data.userId.slice(0, 4)}` : '';
 
                 card.innerHTML = `
-                    ${editBtn}
+                    ${actionBtns}
                     ${previewHtml}
                     <div class="p-3 flex flex-col flex-grow">
                         <h4 class="font-bold text-white text-md truncate group-hover:text-yellow-400">${data.title}</h4>
@@ -771,7 +872,10 @@
             setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
         
-        window.refreshCommunityGrid = () => { /* Triggered by auth change */ };
+        window.refreshCommunityGrid = () => { 
+            const grid = document.getElementById('community-grid');
+            if(grid.innerHTML.includes("Carregando")) return; 
+        };
 
     </script>
 </body>
