@@ -148,6 +148,8 @@
                 <h2 class="text-3xl font-bold text-yellow-500 mb-2">Batalha <span id="game-category-title">Ninjas</span></h2>
                 <p class="text-gray-400 mb-8">Quem é melhor? Clique no vencedor!</p>
 
+                <div id="battle-error-msg" class="hidden text-red-400 text-lg font-bold mb-8">Não há imagens suficientes para batalhar nesta categoria.</div>
+
                 <!-- Área de Batalha -->
                 <div id="battle-area" class="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 mb-8">
                     <!-- Lutador 1 -->
@@ -222,21 +224,21 @@
             <div class="flex-grow space-y-4">
                 <div class="bg-gray-800 p-4 rounded-lg border border-gray-700 shadow-lg">
                     <div class="flex flex-col md:flex-row gap-4 mb-4 items-end">
-                        <div class="flex-grow w-full">
+                        <div class="w-full md:w-5/12">
                             <label class="text-[10px] uppercase text-gray-400 font-bold ml-1 tracking-wider">Nome da Tier List</label>
-                            <input type="text" id="tier-title" placeholder="Ex: Melhores Ninjas PvP..." 
+                            <input type="text" id="tier-title" placeholder="Ex: Meta PvP" 
                                 class="bg-gray-900 text-white text-lg font-bold px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
                         </div>
-                        <div class="w-full md:w-40">
-                            <label class="text-[10px] uppercase text-gray-400 font-bold ml-1 tracking-wider">Seu Nick</label>
+                        <div class="w-full md:w-5/12">
+                            <label class="text-[10px] uppercase text-gray-400 font-bold ml-1 tracking-wider">Seu Nick (Criador)</label>
                             <input type="text" id="creator-name" placeholder="Ex: Auriosh" maxlength="15"
                                 class="bg-gray-900 text-white text-lg px-4 py-2 rounded border border-gray-600 focus:border-yellow-500 outline-none w-full">
                         </div>
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 w-full md:w-2/12 justify-end">
                              <button onclick="addTierRow()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-2 rounded font-bold transition h-[46px]" title="Adicionar Linha">
                                 <i class="fas fa-plus"></i>
                             </button>
-                            <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2 h-[46px]">
+                            <button onclick="saveTierList()" class="bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded font-bold transition flex items-center gap-2 h-[46px] w-full justify-center">
                                 <i class="fas fa-save"></i> SALVAR
                             </button>
                          </div>
@@ -557,7 +559,22 @@
         window.pickNextBattle = () => {
             const category = appState.currentCategory;
             const allImages = appState.imagesCache[category];
-            if (!allImages || allImages.length < 2) return alert("Poucas imagens.");
+            
+            // TRATAMENTO SEM IMAGENS
+            const battleArea = document.getElementById('battle-area');
+            const errorMsg = document.getElementById('battle-error-msg');
+            const loading = document.getElementById('battle-loading');
+
+            if (!allImages || allImages.length < 2) {
+                battleArea.classList.add('hidden');
+                loading.classList.add('hidden');
+                errorMsg.classList.remove('hidden');
+                errorMsg.innerText = "Não há imagens suficientes para batalhar nesta categoria.";
+                return;
+            } else {
+                battleArea.classList.remove('hidden');
+                errorMsg.classList.add('hidden');
+            }
 
             const seen = getSeenBattles();
             const pool = allImages.map(img => {
@@ -1090,6 +1107,12 @@
 
         window.vote = async (docId) => {
             if (!appState.currentUser) return;
+            // Check if already voted locally to avoid call
+            const data = appState.communityData[docId];
+            if (data && data.voterIds && data.voterIds.includes(appState.currentUser.uid)) {
+                alert("Você já votou nesta lista!");
+                return;
+            }
             try { await updateDoc(doc(db, "tierlists", docId), { votes: increment(1), voterIds: arrayUnion(appState.currentUser.uid) }); } catch (e) {}
         };
 
