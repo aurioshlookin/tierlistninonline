@@ -54,7 +54,7 @@
             position: relative; overflow: hidden; display: flex; flex-direction: column;
         }
         .battle-card:hover { transform: scale(1.05); border-color: #fbbf24; box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
-        .battle-card .ninja-image { margin-bottom: 40px; } /* Mais espaço para nome */
+        .battle-card .ninja-image { margin-bottom: 40px; } 
         .battle-card .ninja-name { font-size: 14px; padding: 8px 0; font-weight: bold; }
 
         /* Scrollbar */
@@ -375,7 +375,7 @@
             communityData: {}, 
             battleStats: {}, 
             currentFighters: [],
-            rankingMonth: null // YYYY-MM
+            rankingMonth: null 
         };
 
         // --- AUTH ---
@@ -426,6 +426,10 @@
         };
 
         // --- NAVEGAÇÃO ---
+        window.resetEditorState = () => {
+            appState.currentDocId = null;
+        }
+
         window.navigateTo = (screen) => {
             ['home-screen', 'editor-screen', 'view-screen', 'minigame-screen'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -434,7 +438,7 @@
             
             if (screen === 'home') {
                 document.getElementById('home-screen').classList.remove('hidden');
-                resetEditorState();
+                window.resetEditorState();
             } else if (screen === 'minigame') {
                 const el = document.getElementById('minigame-screen');
                 el.classList.remove('hidden');
@@ -444,18 +448,16 @@
         };
 
         // ==========================================
-        // LÓGICA DO MINI GAME (BATALHA EQUILIBRADA MENSAL)
+        // LÓGICA DO MINI GAME
         // ==========================================
         
         window.openMiniGameSetup = () => document.getElementById('minigame-setup-modal').classList.remove('hidden');
 
-        // GERA A DATA ATUAL NO FORMATO YYYY-MM
         function getCurrentMonthId() {
             const now = new Date();
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
         }
 
-        // CARREGA MESES DISPONÍVEIS DO BANCO
         async function loadAvailableMonths(category) {
             try {
                 const docSnap = await getDoc(doc(db, "meta", "battles"));
@@ -475,12 +477,7 @@
             let months = await loadAvailableMonths(category);
             const current = getCurrentMonthId();
             
-            // Garante que o mês atual esteja na lista mesmo se não tiver no banco ainda
-            if (!months.includes(current)) {
-                months.unshift(current);
-            }
-            
-            // Remove duplicatas e ordena
+            if (!months.includes(current)) months.unshift(current);
             months = [...new Set(months)].sort().reverse();
 
             months.forEach(m => {
@@ -501,17 +498,12 @@
         window.startMiniGame = async (category) => {
             closeModals();
             appState.currentCategory = category;
-            appState.rankingMonth = getCurrentMonthId(); // Inicia com mês atual
+            appState.rankingMonth = getCurrentMonthId(); 
             
             document.getElementById('game-category-title').innerText = category.charAt(0).toUpperCase() + category.slice(1);
-            
-            // Inicializa seletor
             await initMonthSelector(category);
-            
             navigateTo('minigame');
-            
             await loadImagesForCategory(category);
-            // Carrega stats do mês ATUAL para balanceamento
             await loadBattleStats(category, getCurrentMonthId()); 
             pickNextBattle();
             updateRankingUI();
@@ -519,15 +511,11 @@
 
         window.changeRankingMonth = async (monthId) => {
             appState.rankingMonth = monthId;
-            // Recarrega stats para o mês selecionado para exibição na tabela
             await loadBattleStats(appState.currentCategory, monthId);
             updateRankingUI();
         };
 
         async function loadBattleStats(category, monthId) {
-            // Agora filtrando por mês e categoria (usando filtragem no cliente para evitar indice complexo imediato)
-            // Ideal: where('category', '==', category).where('month', '==', monthId)
-            // Se der erro de indice, o Firestore avisa no console.
             const q = query(collection(db, "battles"), 
                 where('category', '==', category),
                 where('month', '==', monthId)
@@ -542,11 +530,9 @@
                 });
             } catch (e) { 
                 console.error("Erro stats:", e); 
-                if(e.message.includes("index")) alert("Aguarde, o índice do banco de dados está sendo criado...");
             }
         }
 
-        // --- SISTEMA DE HISTÓRICO LOCAL ---
         function getSeenBattles() {
             if (!appState.currentUser) return new Set();
             const key = `seen_${appState.currentUser.uid}_${appState.currentCategory}_${getCurrentMonthId()}`;
@@ -566,10 +552,9 @@
         window.pickNextBattle = () => {
             const category = appState.currentCategory;
             const allImages = appState.imagesCache[category];
-            if (!allImages || allImages.length < 2) return alert("Poucas imagens para batalha.");
+            if (!allImages || allImages.length < 2) return alert("Poucas imagens.");
 
             const seen = getSeenBattles();
-
             const pool = allImages.map(img => {
                 const name = img.name.replace(/\.[^/.]+$/, "");
                 const stats = appState.battleStats[name] || { battles: 0, wins: 0 };
@@ -579,7 +564,6 @@
             pool.sort((a, b) => a.battles - b.battles);
 
             let fighterA, fighterB;
-
             for (let i = 0; i < pool.length; i++) {
                 const candidateA = pool[i];
                 for (let j = 0; j < pool.length; j++) {
@@ -629,48 +613,46 @@
             const winner = appState.currentFighters[winnerSlot - 1];
             const loser = appState.currentFighters[winnerSlot === 1 ? 1 : 0];
             const category = appState.currentCategory;
-            const currentMonth = getCurrentMonthId(); // SEMPRE salva no mês atual
+            const currentMonth = getCurrentMonthId(); 
 
             markBattleSeen(winner.name, loser.name);
 
-            // ID do documento agora inclui o Mês
             const winnerRef = doc(db, "battles", `${category}_${currentMonth}_${winner.name}`);
             const loserRef = doc(db, "battles", `${category}_${currentMonth}_${loser.name}`);
             const metaRef = doc(db, "meta", "battles");
 
             try {
+                // FIXED: Using deep object structure for correct map merging
                 const winnerUpdate = { 
                     battles: increment(1), 
                     wins: increment(1),
                     name: winner.name,
                     category: category,
-                    month: currentMonth
+                    month: currentMonth,
+                    beat: { [loser.name]: increment(1) }
                 };
-                winnerUpdate[`beat.${loser.name}`] = increment(1); 
 
                 const loserUpdate = { 
                     battles: increment(1),
                     name: loser.name,
                     category: category,
-                    month: currentMonth
+                    month: currentMonth,
+                    lost_to: { [winner.name]: increment(1) }
                 };
-                loserUpdate[`lost_to.${winner.name}`] = increment(1); 
 
                 await Promise.all([
                     setDoc(winnerRef, winnerUpdate, { merge: true }),
                     setDoc(loserRef, loserUpdate, { merge: true }),
-                    // Tenta atualizar meta, mas se falhar (por regras) o jogo continua
-                    setDoc(metaRef, { [`months_${category}`]: arrayUnion(currentMonth) }, { merge: true }).catch(err => console.log("Meta update skipped", err))
+                    setDoc(metaRef, { [`months_${category}`]: arrayUnion(currentMonth) }, { merge: true }).catch(err => console.log("Meta err", err))
                 ]);
 
-                // Atualiza Cache SE estivermos vendo o mês atual
                 if (appState.rankingMonth === currentMonth) {
                     updateLocalStats(winner.name, true, loser.name);
                     updateLocalStats(loser.name, false, winner.name);
                     updateRankingUI();
                 }
 
-                showToast(`Voto registrado para ${winner.name}!`);
+                showToast(`Voto registrado!`);
                 pickNextBattle();
 
             } catch(e) {
@@ -682,7 +664,7 @@
         };
 
         function updateLocalStats(name, won, opponentName) {
-            if(!appState.battleStats[name]) appState.battleStats[name] = { battles: 0, wins: 0, beat: {}, lost_to: {} };
+            if(!appState.battleStats[name]) appState.battleStats[name] = { name: name, battles: 0, wins: 0, beat: {}, lost_to: {} };
             const s = appState.battleStats[name];
             s.battles++;
             if(won) {
@@ -708,13 +690,11 @@
             return maxKey !== "-" ? `${maxKey} (${maxValue})` : "-";
         }
 
-        // --- ATUALIZAÇÃO DO RANKING COMPLETO (TABELA) ---
         function updateRankingUI() {
             const tbody = document.getElementById('game-ranking-body');
             tbody.innerHTML = '';
 
             const ranking = Object.values(appState.battleStats)
-                // O filtro de mês já foi feito no loadBattleStats (query firestore)
                 .map(item => {
                     const wins = item.wins || 0;
                     const battles = item.battles || 0;
@@ -725,7 +705,7 @@
                     
                     return { ...item, wins, battles, losses, winRate, victim, nemesis };
                 })
-                .sort((a, b) => b.wins - a.wins); // Ordena por vitórias
+                .sort((a, b) => b.wins - a.wins);
 
             if(ranking.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="text-center p-4">Nenhuma batalha registrada neste mês.</td></tr>';
@@ -836,7 +816,7 @@
             if (grid.innerHTML === '') grid.innerHTML = '<div class="col-span-full text-center text-gray-500 py-10">Nenhuma Tier List encontrada.</div>';
         };
 
-        // --- OUTRAS FUNÇÕES (Editor, Visualização, etc.) ---
+        // --- OUTRAS FUNÇÕES ---
         window.openCategoryModal = () => document.getElementById('category-modal').classList.remove('hidden');
         window.showHomeScreen = () => navigateTo('home');
         
